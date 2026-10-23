@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>YeahBuddy Poker</title>
+<meta name="description" content="Standings, results and history for the YeahBuddy Poker Thursday night league.">
 <meta name="theme-color" content="#0A3F2F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -12,13 +13,1022 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<script>
+/* ==========================================================
+   Paste your Apps Script web app link (ends in /exec) here:
+   ========================================================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxXR-kItwWVRX9VWK9KpzJ0OsXpElC_HYgDyStIk6yq4P89JMmIqjABfdiE4UgQtGxTLw/exec';
+</script>
 <style>
-  html,body{margin:0;height:100%;background:#0A3F2F}
-  iframe{position:fixed;inset:0;width:100%;height:100%;border:0}
+:root{
+  --felt:#0F5A43; --felt-deep:#0A3F2F; --felt-line:#1C6E55; --felt-text:#BFD6CB;
+  --ivory:#FFF9EC; --paper:#FFFDF7; --ink:#14201B; --mute:#5D6A63; --rule:#E7DFCB; --sand:#F6F0E1;
+  --chip:#C8312B; --chip-deep:#9E2420; --brass:#D9A441; --brass-deep:#9A6F17;
+  --good:#1F7A4D; --bad:#B42A24;
+  --display:"Bricolage Grotesque","Arial Narrow",sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;color:var(--ink);font:16px/1.45 var(--body);-webkit-text-size-adjust:100%}
+html{background:var(--felt-deep)}
+body{min-height:100vh;background:radial-gradient(120% 50% at 50% 0%, var(--felt) 0%, var(--felt-deep) 100%) fixed var(--felt-deep)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;letter-spacing:-.01em}
+h1{font-size:30px;font-weight:800}
+h2{font-size:22px;font-weight:800}
+h3{font-size:17px;font-weight:600}
+p{margin:0}
+.meta{color:var(--mute);font-size:14px}
+.hint{font-size:14px;color:var(--mute);margin-top:10px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+main{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px calc(100px + env(safe-area-inset-bottom))}
+.sheet{background:var(--paper);border-radius:18px;padding:18px 16px;margin-bottom:16px;box-shadow:0 1px 0 rgba(0,0,0,.25),0 10px 30px -18px rgba(0,0,0,.6)}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 2px 14px;color:var(--ivory)}
+.page-head h1{color:var(--ivory)}
+
+/* account button */
+.acct{flex:none;border:1.5px solid #6FA58E;background:transparent;color:var(--ivory);border-radius:999px;padding:6px 13px;font-weight:700;font-size:14px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct.in{background:var(--ivory);color:var(--ink);border-color:var(--ivory)}
+
+/* ---------- home hero ---------- */
+.hero{position:relative;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin:34px 0 18px}
+.hero svg{width:84px;height:84px}
+.brand{font:800 clamp(36px,10.5vw,58px)/.9 var(--display);color:var(--ivory);letter-spacing:-.03em}
+.brand span{display:block;color:var(--brass)}
+.tagline{color:var(--felt-text);font-size:14px;margin-top:6px}
+.hero .acct{position:absolute;top:-30px;right:0}
+
+.pot{border-radius:18px;padding:16px;margin-bottom:16px;color:var(--ivory);
+  background:linear-gradient(135deg,#123F31 0%,#0B3428 100%);border:1.5px solid var(--brass);position:relative;overflow:hidden}
+.pot .lbl{color:var(--brass);font-weight:700;font-size:15px}
+.pot .amt{font:800 56px/1 var(--display);letter-spacing:-.02em;margin:4px 0 6px}
+.pot p{color:var(--felt-text);font-size:14px;max-width:44ch}
+.pot .splits{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pot .splits div{background:rgba(255,249,236,.08);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--felt-text)}
+.pot .splits b{display:block;color:var(--ivory);font:800 18px/1.1 var(--display)}
+
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:8px;align-items:end;margin:14px 0 6px}
+.podium .step{background:var(--sand);border-radius:14px 14px 6px 6px;padding:12px 6px 10px;text-align:center;min-width:0}
+.podium .step.first{background:#FBEFD3;padding-top:16px;border:1.5px solid var(--brass)}
+.podium .chip{margin:0 auto 6px}
+.podium .pid{font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;margin:0 auto}
+.podium .w{color:var(--good);font:800 20px/1.2 var(--display)}
+.podium .pts{font-size:12px;color:var(--mute)}
+
+/* ---------- controls ---------- */
+select,input[type=text],input[type=password],input[type=date],input[type=email],input[type=search]{
+  border:1.5px solid #CFC5AE;background:#fff;border-radius:10px;padding:9px 11px;min-height:42px;max-width:100%}
+label.f{display:block;font-weight:700;font-size:14px;margin-bottom:4px}
+.field{margin-bottom:12px}
+.field input{width:100%}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:700;min-height:44px;background:var(--ink);color:var(--ivory)}
+.btn.red{background:var(--chip)}
+.btn.line{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.small{min-height:34px;padding:6px 11px;font-size:14px}
+.btn.wide{width:100%;margin-top:12px}
+.btn:disabled{opacity:.45;cursor:default}
+.linkish{background:none;border:0;padding:0;color:var(--chip-deep);text-decoration:underline;font-weight:700}
+.pid{background:none;border:0;padding:0;font-weight:700;color:inherit;text-align:left;text-decoration:underline;text-decoration-color:#CFC5AE;text-underline-offset:3px;overflow-wrap:anywhere}
+.pid:hover{text-decoration-color:var(--chip)}
+.seg{display:inline-flex;background:var(--felt);border-radius:999px;padding:3px;border:1px solid var(--felt-line)}
+.seg button{border:0;background:transparent;color:#CFE3D9;padding:8px 16px;border-radius:999px;font-weight:700;font-size:15px}
+.seg button[aria-pressed=true]{background:var(--ivory);color:var(--ink)}
+.seg.full{display:flex;width:100%}
+.seg.full button{flex:1}
+.seg.light{background:#EFE7D3;border-color:#E2D8BF}
+.seg.light button{color:var(--mute)}
+.seg.light button[aria-pressed=true]{background:var(--ink);color:var(--ivory)}
+.seg.grid2{display:grid;grid-template-columns:1fr 1fr;border-radius:16px;width:100%;max-width:420px}
+.seg.grid2 button{border-radius:12px}
+
+/* period navigator */
+.nav{display:flex;align-items:center;gap:8px;margin:12px 0 14px}
+.nav select{flex:1;min-width:0;background:var(--felt);color:var(--ivory);border-color:#5E9B83;font-weight:700;text-align:center;text-align-last:center}
+.arrow{flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid #5E9B83;background:transparent;color:var(--ivory);display:grid;place-items:center}
+.arrow svg{width:22px;height:22px}
+.arrow:disabled{opacity:.3;cursor:default}
+
+/* ---------- chips ---------- */
+.chip{--c:#fff;--e:#B7AD96;--t:var(--ink);flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle,var(--c) 0 58%,transparent 59%),repeating-conic-gradient(var(--e) 0 22.5deg,var(--c) 22.5deg 45deg);
+  border:2px solid var(--e);font:800 15px/1 var(--display);color:var(--t)}
+.chip.p1,.chip.p2,.chip.p3{--c:var(--chip);--e:var(--chip-deep);--t:#fff;
+  background:radial-gradient(circle,var(--chip) 0 56%,transparent 57%),repeating-conic-gradient(#fff 0 22.5deg,var(--chip) 22.5deg 45deg)}
+.chip.toc{--c:#FBEFD3;--e:var(--brass)}
+.chip.big{width:52px;height:52px;font-size:20px}
+
+/* ---------- lists ---------- */
+.list{list-style:none;margin:0;padding:0}
+.li{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--rule)}
+.li:last-child{border-bottom:0}
+.li .grow{flex:1;min-width:0}
+.li .sub{font-size:13px;color:var(--mute)}
+.li .val{text-align:right;font-weight:700;white-space:nowrap}
+.li .val small{display:block;font-weight:400;color:var(--mute);font-size:12px}
+.li.me{background:#FFF1C9;margin:0 -16px;padding-left:16px;padding-right:16px}
+.won{color:var(--good);font-weight:700}
+.cut{display:flex;align-items:center;gap:10px;margin:6px 0;color:var(--brass-deep);font-weight:700;font-size:13px;text-align:center}
+.cut::before,.cut::after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--brass) 0 8px,transparent 8px 13px)}
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+table.t th{text-align:left;font-size:13px;color:var(--mute);font-weight:700;padding:6px;border-bottom:2px solid var(--rule);white-space:nowrap}
+table.t td{padding:8px 6px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.t .r{text-align:right}
+table.t .hl{background:#FFF1C9}
+table.t th.hl{color:var(--ink)}
+.scrollx{overflow-x:auto;margin:0 -16px;padding:0 16px}
+.sticky1 th:first-child,.sticky1 td:first-child{position:sticky;left:0;background:var(--paper);z-index:1}
+
+/* ---------- stats / money ---------- */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--sand);border-radius:12px;padding:10px 10px 9px}
+.stat b{display:block;font:800 24px/1.05 var(--display)}
+.stat span{font-size:13px;color:var(--mute)}
+.money{border:2px solid var(--ink);border-radius:14px;padding:14px;margin-top:14px}
+.money .big{font:800 34px/1 var(--display)}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.lock{background:var(--sand);border-radius:12px;padding:12px 14px;margin-top:14px;font-size:15px}
+
+/* ---------- history ---------- */
+.find{display:flex;align-items:center;gap:6px;background:var(--felt);border:1.5px solid #5E9B83;border-radius:999px;padding:2px 4px 2px 12px;width:min(210px,52vw)}
+.find svg{width:18px;height:18px;flex:none;color:var(--felt-text)}
+.find input{border:0;background:transparent;color:var(--ivory);min-height:36px;padding:4px;width:100%;outline:none}
+.find input::placeholder{color:#9DC1B1}
+.find:focus-within{border-color:var(--brass)}
+.prof-head{display:flex;align-items:center;gap:14px}
+.prof-head h2{font-size:28px;overflow-wrap:anywhere}
+
+.badges{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:16px -16px 2px;padding:2px 16px 10px;scrollbar-width:thin}
+.badge{scroll-snap-align:start;flex:none;width:128px;border-radius:16px;padding:12px 10px 11px;text-align:center;background:var(--sand);border:1.5px solid var(--rule)}
+.badge .med{width:58px;height:58px;margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;color:#fff;
+  --m:var(--felt);--r:#fff;
+  background:radial-gradient(circle,var(--m) 0 55%,transparent 56%),repeating-conic-gradient(var(--r) 0 20deg,var(--m) 20deg 40deg);
+  box-shadow:0 0 0 2px var(--m)}
+.badge .med svg{width:26px;height:26px}
+.badge b{display:block;font:800 15px/1.15 var(--display)}
+.badge .yr{font:800 20px/1.2 var(--display);color:var(--ink)}
+.badge small{display:block;font-size:12px;color:var(--mute);line-height:1.3;margin-top:2px}
+.badge.gold{background:#FBEFD3;border-color:var(--brass)}
+.badge.gold .med{--m:var(--brass);--r:#FFF6DD;color:var(--ink)}
+.badge.red .med{--m:var(--chip);--r:#fff}
+.badge.ivory .med{--m:var(--ink);--r:var(--ivory)}
+.badge.felt .med{--m:var(--felt);--r:#CFE3D9}
+
+/* ---------- payouts ---------- */
+.calc{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.stepper{display:flex;align-items:center;border:2px solid var(--ink);border-radius:999px;overflow:hidden}
+.stepper button{width:46px;height:46px;border:0;background:var(--ink);color:var(--ivory);font-size:24px;font-weight:700}
+.stepper output{min-width:58px;text-align:center;font:800 26px/1 var(--display)}
+.potbig{font:800 40px/1 var(--display)}
+
+/* ---------- rules ---------- */
+.rules h2{margin-bottom:8px}
+.rules p+p,.rules ul+p,.rules p+ul{margin-top:8px}
+.rules ul{margin:8px 0 0;padding-left:20px}
+.rules li{margin:4px 0}
+.rules .callout{background:var(--sand);border-radius:12px;padding:10px 12px;margin-top:10px}
+.mono{font-family:var(--display);font-weight:800;letter-spacing:.02em}
+
+/* ---------- bottom nav ---------- */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--ivory);border-top:1px solid var(--rule);
+  display:flex;justify-content:center;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav.tabs .in{display:flex;width:100%;max-width:600px}
+nav.tabs button{flex:1;min-width:0;border:0;background:transparent;padding:6px 1px;color:var(--mute);font-size:11.5px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px}
+nav.tabs svg{width:24px;height:24px}
+nav.tabs button[aria-current=page]{color:var(--chip-deep);background:#F6EBD3}
+
+/* ---------- manager ---------- */
+.entry .li{gap:8px;flex-wrap:wrap}
+.entry .place{width:30px;text-align:center;font:800 18px/1 var(--display)}
+.entry .ctrls{display:flex;gap:6px;align-items:center;width:100%;padding-left:42px}
+.entry .ctrls .paidbox{margin-right:auto}
+.icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid #CFC5AE;background:#fff;display:grid;place-items:center;font-weight:800;line-height:1}
+.paidbox{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--mute)}
+.paidbox input{width:20px;height:20px;accent-color:var(--good)}
+.banner{background:#FFF1C9;border:1.5px solid var(--brass);border-radius:12px;padding:10px 12px;font-size:15px}
+.err{background:#FBE3E1;border:1.5px solid var(--bad);color:#6E1612;border-radius:12px;padding:10px 12px;font-size:15px}
+.ok{background:#DFF2E7;border:1.5px solid var(--good);color:#0F4A2C;border-radius:12px;padding:10px 12px;font-size:15px}
+.note-in{width:100%;margin-top:6px;min-height:34px!important;padding:5px 9px!important;font-size:14px}
+.owed-item{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:6px 0;border-top:1px dashed var(--rule);font-size:15px}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 8px;background:#EFE7D3;color:var(--mute)}
+.tag.on{background:#DFF2E7;color:var(--good)}
+
+/* ---------- dialog ---------- */
+.scrim{position:fixed;inset:0;background:rgba(5,25,18,.6);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.dialog{background:var(--paper);width:100%;max-width:460px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));animation:rise .22s ease-out}
+@media (min-width:600px){.scrim{align-items:center}.dialog{border-radius:20px}}
+@keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.pin{font:800 54px/1 var(--display);letter-spacing:.12em;margin:10px 0}
+
+/* ---------- loader: chips dropping onto a stack ---------- */
+.loader{display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 0;color:var(--felt-text)}
+.loader.inpaper{color:var(--mute);padding:22px 0}
+.stack{position:relative;width:64px;height:76px}
+.stack i{position:absolute;left:4px;width:56px;height:16px;border-radius:50%;
+  background:repeating-linear-gradient(90deg,var(--chip) 0 9px,#fff 9px 13px);
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 2px 0 var(--chip-deep);opacity:0;
+  animation:drop 2s cubic-bezier(.3,.7,.4,1) infinite}
+.stack i:nth-child(1){bottom:0;animation-delay:0s}
+.stack i:nth-child(2){bottom:13px;animation-delay:.25s;background:repeating-linear-gradient(90deg,var(--ink) 0 9px,#fff 9px 13px);box-shadow:inset 0 -3px 0 rgba(0,0,0,.3),0 2px 0 #000}
+.stack i:nth-child(3){bottom:26px;animation-delay:.5s;background:repeating-linear-gradient(90deg,var(--brass) 0 9px,#fff 9px 13px);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 2px 0 var(--brass-deep)}
+.stack i:nth-child(4){bottom:39px;animation-delay:.75s}
+.stack i:nth-child(5){bottom:52px;animation-delay:1s;background:repeating-linear-gradient(90deg,var(--felt) 0 9px,#fff 9px 13px);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 2px 0 var(--felt-deep)}
+@keyframes drop{
+  0%{transform:translateY(-60px);opacity:0}
+  12%{transform:translateY(0);opacity:1}
+  16%{transform:translateY(-3px)}
+  20%,78%{transform:translateY(0);opacity:1}
+  90%,100%{transform:translateY(0);opacity:0}
+}
+.loader p{font-weight:700}
+@media (prefers-reduced-motion:reduce){
+  .stack i{animation:none;opacity:1}
+  .dialog{animation:none}
+}
+.refreshing{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--ivory);
+  font-size:13px;font-weight:700;padding:6px 12px;border-radius:999px;display:flex;align-items:center;gap:8px;opacity:.92}
+.refreshing i{width:12px;height:12px;border-radius:50%;border:2px solid var(--brass);border-top-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{padding:16px 0;color:var(--mute)}
+.hide{display:none!important}
 </style>
 </head>
 <body>
-<!-- Paste your Apps Script web app URL (ends in /exec) between the quotes below -->
-<iframe src="https://script.google.com/macros/s/AKfycbxXR-kItwWVRX9VWK9KpzJ0OsXpElC_HYgDyStIk6yq4P89JMmIqjABfdiE4UgQtGxTLw/exec" title="YeahBuddy Poker" allow="clipboard-write"></iframe>
+
+<main id="view"></main>
+<nav class="tabs" aria-label="Sections"><div class="in" id="tabs"></div></nav>
+<div id="dialogRoot"></div>
+<div id="refresh" class="refreshing hide" role="status"><i></i>Updating</div>
+
+<!-- logo mark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="ybcard"><rect x="-82" y="-118" width="164" height="236" rx="16" fill="#FFF9EC" stroke="#14201B" stroke-width="7"/></g>
+    <g id="mark">
+      <g transform="translate(178 214) rotate(-15)"><use href="#ybcard"/>
+        <text x="-62" y="-70" font-family="Georgia,serif" font-weight="700" font-size="46" fill="#14201B">A</text>
+        <path d="M-48 -52 c-14 12 -22 18 -22 28 c0 9 9 14 17 9 c-2 6 -5 10 -9 12 h28 c-4 -2 -7 -6 -9 -12 c8 5 17 0 17 -9 c0 -10 -8 -16 -22 -28z" fill="#14201B"/></g>
+      <g transform="translate(334 214) rotate(13)"><use href="#ybcard"/>
+        <text x="22" y="-70" font-family="Georgia,serif" font-weight="700" font-size="46" fill="#C8312B">A</text>
+        <path d="M48 -16 c-16 -12 -26 -20 -26 -31 c0 -9 7 -14 14 -14 c5 0 9 3 12 7 c3 -4 7 -7 12 -7 c7 0 14 5 14 14 c0 11 -10 19 -26 31z" fill="#C8312B"/></g>
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <g stroke="#FFF9EC" stroke-width="30"><path d="M256 226 V352"/><path d="M256 352 L214 446 M256 352 L298 446"/><path d="M256 262 L320 302 L272 340"/><path d="M256 262 L194 326 L236 318"/></g>
+        <g stroke="#14201B" stroke-width="15"><path d="M256 226 V352"/><path d="M256 352 L214 446 M256 352 L298 446"/><path d="M256 262 L320 302 L272 340"/><path d="M256 262 L194 326 L236 318"/></g>
+      </g>
+      <rect x="226" y="294" width="50" height="44" rx="13" fill="#FFF9EC" stroke="#FFF9EC" stroke-width="16"/>
+      <rect x="248" y="256" width="20" height="52" rx="10" fill="#FFF9EC" stroke="#FFF9EC" stroke-width="16"/>
+      <rect x="226" y="294" width="50" height="44" rx="13" fill="#FFF9EC" stroke="#14201B" stroke-width="8"/>
+      <rect x="248" y="256" width="20" height="52" rx="10" fill="#FFF9EC" stroke="#14201B" stroke-width="8"/>
+      <path d="M232 310 H262 M232 323 H262" stroke="#14201B" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="256" cy="168" r="66" fill="#FFF9EC"/>
+      <circle cx="256" cy="168" r="56" fill="#C8312B" stroke="#14201B" stroke-width="8"/>
+      <circle cx="256" cy="168" r="44" fill="none" stroke="#FFF9EC" stroke-width="10" stroke-dasharray="17.3 17.3"/>
+      <circle cx="256" cy="168" r="31" fill="#FFF9EC" stroke="#14201B" stroke-width="4"/>
+      <circle cx="245" cy="162" r="4.5" fill="#14201B"/><circle cx="267" cy="162" r="4.5" fill="#14201B"/>
+      <path d="M241 174 Q256 188 271 174" fill="none" stroke="#14201B" stroke-width="4.5" stroke-linecap="round"/>
+    </g>
+  </defs>
+</svg>
+
+<script>
+/* ===================== state ===================== */
+const S = {
+  snap:null, token:null, me:null, tab:'home',
+  year:null, weekly:{}, standings:{},
+  standMode:'season', weekIdx:0, month:null,
+  players:14, profiles:{}, profileYear:null, histQuery:'', histErr:null,
+  mgrTab:'entry', mgr:null, money:{}, moneyYear:'all', playerFilter:'',
+  entry:{date:'', rows:[], editing:false, msg:null, busy:false}
+};
+const store={
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ v==null?localStorage.removeItem(k):localStorage.setItem(k,v); }catch(e){} }
+};
+const SNAP_KEY='ybp_snap_v2';
+
+async function call(action,args){
+  if(!/^https?:/.test(API_URL)) throw new Error('This app isn\'t connected to the league sheet yet. Paste the Apps Script /exec link into index.html where it says API_URL.');
+  let res;
+  try{
+    res = await fetch(API_URL,{method:'POST',body:JSON.stringify({action,args:args||{},token:S.token||''})});
+  }catch(e){ throw new Error('Couldn\'t reach the league sheet. Check your connection and try again.'); }
+  let r; try{ r=await res.json(); }catch(e){ throw new Error('The league sheet sent back something unexpected. Try again in a moment.'); }
+  if(!r.ok) throw new Error(r.error);
+  return r.data;
+}
+
+const $=s=>document.querySelector(s);
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_LONG=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const pd=s=>{ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+const dShort=s=>{ const d=pd(s); return MONTHS[d.getMonth()]+' '+d.getDate(); };
+const dLong=s=>{ const d=pd(s); return DAYS[d.getDay()]+', '+MONTHS_LONG[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear(); };
+const dMed=s=>{ const d=pd(s); return MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear(); };
+function money(n,signed){
+  if(n==null) return '';
+  const a=Math.abs(n), frac=Math.round(a*100)%100!==0;
+  const s='$'+a.toLocaleString('en-US',{minimumFractionDigits:frac?2:0,maximumFractionDigits:2});
+  return n<0?'−'+s:(signed&&n>0?'+':'')+s;
+}
+function ord(n){ const s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+const chip=(n,extra)=>`<span class="chip ${n<=3?'p'+n:''} ${extra||''}" aria-label="${ord(n)}">${n}</span>`;
+const pid=id=>id?`<button class="pid" data-pid="${esc(id)}">${esc(id)}</button>`:'<span class="meta">Player not matched</span>';
+const isMe=id=>S.me&&S.me.id&&String(S.me.id).toLowerCase()===String(id).toLowerCase();
+const isMgr=()=>S.me&&S.me.role==='manager';
+const errBox=e=>`<div class="err">${esc(e.message||e)}</div>`;
+const LOAD_MSG=['Shuffling up…','Stacking chips…','Counting the pot…','Dealing the cards…'];
+const loader=(msg,paper)=>`<div class="loader ${paper?'inpaper':''}" role="status"><div class="stack" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><p>${esc(msg||LOAD_MSG[Math.floor(Math.random()*LOAD_MSG.length)])}</p></div>`;
+const ARROW_L='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+const ARROW_R='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+
+/* ===================== payout math (mirrors the sheet) ===================== */
+const cfg=()=>S.snap.config;
+const bracketFor=n=>(S.snap.payouts||[]).find(b=>n>=b.min&&n<=b.max)||null;
+const potFor=n=>Math.round(n*cfg().buyIn-n*cfg().tocFee);
+function payoutFor(n,place){ const b=bracketFor(n); if(!b) return 0; const p=b.pct[place-1]; return p?Math.round(potFor(n)*p):0; }
+const pointsFor=(n,place)=>n-(place-1)+(place===1?3:place===2?2:place===3?1:0);
+
+/* ===================== data helpers ===================== */
+async function getWeekly(y){ if(!S.weekly[y]) S.weekly[y]=await call('weekly',{year:y}); return S.weekly[y]; }
+async function getStandings(y){ if(!S.standings[y]) S.standings[y]=await call('standings',{year:y}); return S.standings[y]; }
+async function getProfile(id){
+  const k=id.toLowerCase();
+  if(!S.profiles[k]) S.profiles[k]=await call('player',{id});
+  return S.profiles[k];
+}
+function applySnap(s){
+  S.snap=s;
+  S.weekly[s.currentYear]=s.weekly[s.currentYear];
+  S.standings[s.currentYear]=s.standings[s.currentYear];
+  if(!S.year) S.year=s.currentYear;
+}
+
+/* ===================== shell ===================== */
+const ICONS={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/></svg>',
+  standings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11h4v9M10 20V5h4v15M16 20v-7h4v7M3 20h18"/></svg>',
+  payouts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v.01M17.5 14.5v.01"/></svg>',
+  history:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5a2.5 2.5 0 0 0 2.5 4M17 6h2.5a2.5 2.5 0 0 1-2.5 4"/></svg>',
+  rules:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
+  manager:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h8M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'
+};
+const TAB_LABEL={home:'Home',standings:'Standings',payouts:'Payouts',history:'History',rules:'Rules',manager:'Manager'};
+const BADGE_ICONS={
+  crown:'<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>',
+  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5a2.5 2.5 0 0 0 2.5 4M17 6h2.5a2.5 2.5 0 0 1-2.5 4"/>',
+  star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  chip:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/>',
+  flame:'<path d="M12 21c-4 0-6.5-2.6-6.5-6 0-4 3.5-6 3.5-10 2.5 1.5 4 4 4 6 1-1 1.5-2.5 1.5-3.5 2.5 2 4 4.7 4 7.5 0 3.4-2.5 6-6.5 6z"/>',
+  ticket:'<path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"/><path d="M14 7v10" stroke-dasharray="2 2"/>',
+  stack:'<ellipse cx="12" cy="6" rx="7" ry="2.5"/><path d="M5 6v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6M5 10v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4M5 14v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4"/>'
+};
+
+function acctBtn(){
+  return S.me
+    ? `<button class="acct in" data-act="account">${isMgr()?'Manager':esc(S.me.id)}</button>`
+    : `<button class="acct" data-act="signin">Sign in</button>`;
+}
+function renderTabs(){
+  const tabs=['home','standings','payouts','history','rules'].concat(isMgr()?['manager']:[]);
+  if(!tabs.includes(S.tab)) S.tab='home';
+  $('#tabs').innerHTML=tabs.map(t=>`<button data-tab="${t}" ${S.tab===t?'aria-current="page"':''}>${ICONS[t]}${TAB_LABEL[t]}</button>`).join('');
+}
+function go(tab){ S.tab=tab; renderTabs(); render(); window.scrollTo(0,0); }
+
+let renderSeq=0;
+async function render(){
+  const v=$('#view'); const seq=++renderSeq;
+  if(!S.snap){ v.innerHTML=loader(); return; }
+  try{
+    const html = await VIEWS[S.tab](v, seq);
+    if(seq!==renderSeq || html==null) return;
+    v.innerHTML=html; v.dataset.seq=seq;
+    if(AFTER[S.tab]) AFTER[S.tab]();
+  }catch(e){ v.dataset.seq=seq; if(seq===renderSeq) v.innerHTML=`<div class="page-head"><h1>${TAB_LABEL[S.tab]}</h1>${acctBtn()}</div><div class="sheet">${errBox(e)}</div>`; }
+}
+/* show a loader only if a fetch is actually slow */
+function slow(v,seq,msg,head){ setTimeout(()=>{ if(seq===renderSeq && v.dataset.seq!==String(seq)) v.innerHTML=(head||'')+loader(msg); },150); }
+
+/* ===================== Home ===================== */
+const VIEWS={}, AFTER={};
+VIEWS.home=function(){
+  const s=S.snap, y=s.currentYear, st=s.standings[y], wk=s.weekly[y]||[], g=wk[0], pot=s.tocPot, c=cfg();
+  const top=st.players.slice(0,15);
+  const rows=[];
+  top.forEach((p,i)=>{
+    if(i>0&&top[i-1].rank<=st.tocSpots&&p.rank>st.tocSpots) rows.push(`<li class="cut" aria-hidden="true">Top ${st.tocSpots} make the Tournament of Champions</li>`);
+    rows.push(`<li class="li ${isMe(p.id)?'me':''}">${chip(p.rank,p.rank<=st.tocSpots&&p.rank>3?'toc':'')}<div class="grow">${pid(p.id)}<div class="sub num">${p.games} games</div></div><div class="val num">${p.pts}<small>points</small></div></li>`);
+  });
+  const split=(c.tocPayout||[]).map((p,i)=>`<div>${ord(i+1)}<b class="num">${money(Math.round(pot.projected*p))}</b></div>`).join('');
+  let latest='';
+  if(g){
+    const r=g.results, at=i=>r[i]||null;
+    const step=(x,cls)=>x?`<div class="step ${cls}">${chip(x.place,'big')}${pid(x.id)}${x.win?`<div class="w num">${money(x.win)}</div>`:''}<div class="pts num">${x.pts} pts</div></div>`:'<div></div>';
+    latest=`<section class="sheet">
+      <h2>Latest tournament</h2>
+      <p class="meta num" style="margin-top:4px">${dLong(g.date)}. ${g.players} players, ${money(g.pot)} prize pool.</p>
+      <div class="podium">${step(at(1),'')}${step(at(0),'first')}${step(at(2),'')}</div>
+      <ol class="list" start="4">${r.slice(3).map(x=>`<li class="li ${isMe(x.id)?'me':''}">${chip(x.place)}<div class="grow">${pid(x.id)}</div><div class="val num">${x.pts}<small>pts</small></div>${x.win?`<div class="val won num">${money(x.win)}</div>`:''}</li>`).join('')}</ol>
+      <button class="btn line wide" data-goto="week">All weekly results</button>
+    </section>`;
+  }
+  return `
+  <header class="hero">
+    <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#mark"/></svg>
+    <div><h1 class="brand">YeahBuddy<span>Poker</span></h1><p class="tagline">Thursday night league on PokerStars</p></div>
+    ${acctBtn()}
+  </header>
+  <section class="pot">
+    <div class="lbl">${pot.year} Tournament of Champions pot</div>
+    <div class="amt num">${money(pot.collected)}</div>
+    <p>${money(c.tocFee)} from each of ${pot.entries} buy-ins so far. When the top ${st.tocSpots} each add their ${money(c.tocFinalistBuyIn)} buy-in, it grows to <b style="color:var(--ivory)">${money(pot.projected)}</b>.</p>
+    ${split?`<div class="splits">${split}</div>`:''}
+  </section>
+  <section class="sheet">
+    <div class="spread"><h2>${y} leaderboard</h2>${st.lastGame?`<span class="meta">Through ${dShort(st.lastGame)}</span>`:''}</div>
+    <ol class="list" style="margin-top:8px">${rows.join('')||'<li class="empty">The season hasn\'t started yet.</li>'}</ol>
+    <button class="btn wide" data-goto="season">View more</button>
+  </section>
+  ${latest}`;
+};
+
+/* ===================== Standings ===================== */
+function navBar(options, value, canPrev, canNext){
+  return `<div class="nav">
+    <button class="arrow" data-nav="-1" aria-label="Earlier" ${canPrev?'':'disabled'}>${ARROW_L}</button>
+    <select id="navSel" aria-label="Choose a time period">${options.map(o=>`<option value="${esc(o.v)}" ${String(o.v)===String(value)?'selected':''}>${esc(o.t)}</option>`).join('')}</select>
+    <button class="arrow" data-nav="1" aria-label="Later" ${canNext?'':'disabled'}>${ARROW_R}</button>
+  </div>`;
+}
+VIEWS.standings=async function(v,seq){
+  const years=S.snap.years, y=S.year, mode=S.standMode;
+  const head=`<div class="page-head"><h1>Standings</h1>${acctBtn()}</div>
+    <div class="seg full" role="group" aria-label="Time frame">
+      ${['week','month','season'].map(m=>`<button data-mode="${m}" aria-pressed="${mode===m}">${m[0].toUpperCase()+m.slice(1)}</button>`).join('')}
+    </div>`;
+  const oldest=years[years.length-1], newest=years[0];
+  if(mode==='week'){
+    slow(v,seq,'Dealing the results…',head);
+    const wk=await getWeekly(y);
+    if(S.weekIdx<0) S.weekIdx=wk.length-1+1+S.weekIdx; // -1 = last (oldest)
+    S.weekIdx=Math.max(0,Math.min(S.weekIdx,wk.length-1));
+    const g=wk[S.weekIdx];
+    const opts=wk.map((x,i)=>({v:i,t:dMed(x.date)}));
+    const canPrev=S.weekIdx<wk.length-1||y>oldest, canNext=S.weekIdx>0||y<newest;
+    return head+navBar(opts,S.weekIdx,canPrev,canNext)+`<section class="sheet" data-swipe>
+      ${!g?`<p class="empty">No games in ${y}.</p>`:`
+      <h2>${dLong(g.date)}</h2><p class="meta num" style="margin-top:4px">${g.players} players, ${money(g.pot)} prize pool</p>
+      <ol class="list" style="margin-top:10px">${g.results.map(r=>`<li class="li ${isMe(r.id)?'me':''}">${chip(r.place)}<div class="grow">${pid(r.id)}<div class="sub num">${r.pts} pts</div></div>${r.win?`<div class="val won num">${money(r.win)}</div>`:''}</li>`).join('')}</ol>`}
+    </section>`;
+  }
+  if(mode==='month'){
+    slow(v,seq,'Adding up the month…',head);
+    const st=await getStandings(y);
+    if(!st.months.length){
+      return head+navBar(years.map(x=>({v:x,t:String(x)})),y,y>oldest,y<newest)+`<section class="sheet" data-swipe><h2>${y}</h2><p class="empty">Month-by-month standings start with the 2025 season, when today's scoring rules began. Season totals for ${y} are under Season.</p></section>`;
+    }
+    if(!S.month||!st.months.some(m=>m.m===S.month)) S.month=st.months[st.months.length-1].m;
+    const mi=st.months.findIndex(m=>m.m===S.month), M=st.months[mi];
+    const list=st.players.filter(p=>p.months&&p.months[S.month]).map(p=>Object.assign({id:p.id},p.months[S.month]));
+    list.sort((a,b)=>b.pts-a.pts||a.id.localeCompare(b.id));
+    list.forEach((p,i)=>{ p.rank=i>0&&list[i-1].pts===p.pts?list[i-1].rank:i+1; });
+    const opts=st.months.map(m=>({v:m.m,t:MONTHS_LONG[Number(m.m)-1]+' '+y}));
+    return head+navBar(opts,S.month,mi>0||y>oldest,mi<st.months.length-1||y<newest)+`<section class="sheet" data-swipe>
+      <h2>${MONTHS_LONG[Number(M.m)-1]} ${y}</h2><p class="meta num" style="margin-top:4px">${M.games} games this month</p>
+      <ol class="list" style="margin-top:8px">${list.map(p=>`<li class="li ${isMe(p.id)?'me':''}">${chip(p.rank)}<div class="grow">${pid(p.id)}<div class="sub num">${p.games} of ${M.games} games${p.dropped!=null?`, dropped a ${p.dropped}`:''}</div></div><div class="val num">${p.pts}<small>points</small></div></li>`).join('')}</ol>
+      <p class="hint">In a month with ${cfg().minGamesForDrop} or more games, players who play every game drop their lowest score.</p>
+    </section>`;
+  }
+  slow(v,seq,'Adding up points…',head);
+  const st=await getStandings(y);
+  const rows=[];
+  st.players.forEach((p,i)=>{
+    if(i>0&&st.players[i-1].rank<=st.tocSpots&&p.rank>st.tocSpots) rows.push(`<li class="cut" aria-hidden="true">Top ${st.tocSpots} ${st.isCurrent?'make':'made'} the Tournament of Champions</li>`);
+    rows.push(`<li class="li ${isMe(p.id)?'me':''}">${chip(p.rank,p.rank<=st.tocSpots&&p.rank>3?'toc':'')}<div class="grow">${pid(p.id)}<div class="sub num">${p.games} games</div></div><div class="val num">${p.pts}<small>points</small></div></li>`);
+  });
+  return head+navBar(years.map(x=>({v:x,t:x+' season'})),y,y>oldest,y<newest)+`<section class="sheet" data-swipe>
+    <h2>${st.isCurrent?y+' season so far':y+' final standings'}</h2>
+    ${st.lastGame&&st.isCurrent?`<p class="meta" style="margin-top:4px">Through ${dShort(st.lastGame)}</p>`:''}
+    <ol class="list" style="margin-top:8px">${rows.join('')||'<li class="empty">No points yet.</li>'}</ol>
+  </section>`;
+};
+AFTER.standings=function(){
+  const sel=$('#navSel'); if(sel) sel.onchange=()=>{
+    if(S.standMode==='week') S.weekIdx=Number(sel.value);
+    else if(S.standMode==='month' && S.standings[S.year] && S.standings[S.year].months.length) S.month=sel.value;
+    else S.year=Number(sel.value);
+    render();
+  };
+  bindSwipe();
+};
+/* dir: -1 earlier, +1 later */
+async function stepPeriod(dir){
+  if($('#view').dataset.seq!==String(renderSeq)) return; // still loading the last step
+  const years=S.snap.years, y=S.year;
+  if(S.standMode==='season'){ const ny=y+dir; if(years.includes(ny)){ S.year=ny; render(); } return; }
+  if(S.standMode==='week'){
+    const wk=S.weekly[y]||[]; const ni=S.weekIdx-dir; // list is newest first
+    if(ni>=0&&ni<wk.length){ S.weekIdx=ni; return render(); }
+    const ny=y+dir; if(!years.includes(ny)) return;
+    S.year=ny; S.weekIdx=dir<0?0:-1; return render();
+  }
+  const st=S.standings[y];
+  if(st&&st.months.length){
+    const mi=st.months.findIndex(m=>m.m===S.month)+dir;
+    if(mi>=0&&mi<st.months.length){ S.month=st.months[mi].m; return render(); }
+  }
+  const ny=y+dir; if(!years.includes(ny)) return;
+  S.year=ny; S.month=null;
+  const nst=await getStandings(ny).catch(()=>null);
+  if(nst&&nst.months.length) S.month=dir<0?nst.months[nst.months.length-1].m:nst.months[0].m;
+  render();
+}
+function bindSwipe(){
+  const el=document.querySelector('[data-swipe]'); if(!el) return;
+  let x0=null,y0=null;
+  el.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; y0=e.touches[0].clientY; },{passive:true});
+  el.addEventListener('touchend',e=>{
+    if(x0==null) return;
+    const dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0; x0=null;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5) stepPeriod(dx<0?1:-1);
+  },{passive:true});
+}
+
+/* ===================== Payouts ===================== */
+VIEWS.payouts=function(){
+  const c=cfg(), n=S.players, b=bracketFor(n), brs=S.snap.payouts;
+  const places=b?b.pct.map((p,i)=>({place:i+1,pct:p,amt:payoutFor(n,i+1)})):[];
+  const maxPl=Math.max(...brs.map(x=>x.pct.length));
+  return `
+  <div class="page-head"><h1>Payouts</h1>${acctBtn()}</div>
+  <section class="sheet">
+    <h2>Payout calculator</h2>
+    <div class="calc" style="margin-top:12px">
+      <div class="stepper" role="group" aria-label="Number of players">
+        <button data-step="-1" aria-label="One fewer player">−</button><output class="num" aria-live="polite">${n}</output><button data-step="1" aria-label="One more player">+</button>
+      </div>
+      <div><div class="potbig num">${money(potFor(n))}</div><div class="meta">prize pool for ${n} players</div></div>
+    </div>
+    <p class="hint">Each player pays ${money(c.buyIn)}. ${money(c.tocFee)} of every buy-in goes to the Tournament of Champions pot, and the rest is paid out.</p>
+    <ol class="list" style="margin-top:6px">${places.length?places.map(p=>`<li class="li">${chip(p.place)}<div class="grow"><b>${ord(p.place)} place</b><div class="sub num">${+(p.pct*100).toFixed(2)}% of the pool</div></div><div class="val won num">${money(p.amt)}</div></li>`).join(''):'<li class="empty">No payout row covers that many players.</li>'}</ol>
+  </section>
+  <section class="sheet">
+    <h2>Payout percentages</h2>
+    <p class="meta" style="margin-top:4px">Find the number of players across the top, then read down for each place. The highlighted column matches the calculator.</p>
+    <div class="scrollx" style="margin-top:10px"><table class="t num sticky1">
+      <thead><tr><th>Place</th>${brs.map(br=>`<th class="r ${br===b?'hl':''}">${br.min}–${br.max}</th>`).join('')}</tr></thead>
+      <tbody>${Array.from({length:maxPl},(_,i)=>`<tr><td><b>${ord(i+1)}</b></td>${brs.map(br=>`<td class="r ${br===b?'hl':''}">${br.pct[i]!=null?+(br.pct[i]*100).toFixed(2)+'%':''}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div>
+    <p class="hint">Column headings are the number of players in the game.</p>
+  </section>`;
+};
+
+/* ===================== History ===================== */
+VIEWS.history=async function(v,seq){
+  if(!S.histQuery&&S.me&&S.me.id) S.histQuery=S.me.id;
+  const head=`<div class="page-head"><h1>History</h1>
+    <form id="lookup" class="find" role="search" autocomplete="off">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+      <input id="pidIn" type="search" list="pids" placeholder="Find a player" aria-label="Find a player by Player ID" value="">
+      <datalist id="pids">${S.snap.playerIds.map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
+    </form></div>`;
+  let p=null, err=null;
+  if(S.histQuery){
+    slow(v,seq,'Pulling the records…',head);
+    try{ p=await getProfile(S.histQuery); if(!S.profileYear||!p.log[S.profileYear]) S.profileYear=p.years[0]&&p.years[0].year; }
+    catch(e){ err=e; }
+  }
+  const toc=S.snap.toc;
+  return head+(err?`<div class="sheet">${errBox(err)}</div>`:'')+(p?profileHtml(p):(!err?`<section class="sheet"><h2>Look someone up</h2><p class="meta" style="margin-top:6px">Search for a Player ID above, or tap any Player ID in the app, to see their wins, trophies and every game they've played.</p></section>`:''))+`
+  <section class="sheet">
+    <h2>Tournament of Champions</h2>
+    ${toc.length?toc.map((t,i)=>`<details ${i===0&&!p?'open':''} style="margin-top:12px"><summary><b>${t.year}</b>${t.results[0]&&t.results[0].id?`: won by ${esc(t.results[0].id)}`:''}</summary>
+      <ol class="list">${t.results.map(r=>`<li class="li ${isMe(r.id)?'me':''}">${chip(r.place,r.place>3?'toc':'')}<div class="grow">${pid(r.id)}</div>${r.win?`<div class="val won num">${money(r.win)}</div>`:''}</li>`).join('')}</ol></details>`).join(''):'<p class="empty">No results yet.</p>'}
+  </section>`;
+};
+AFTER.history=function(){
+  const f=$('#lookup'), inp=$('#pidIn');
+  const submit=()=>{ const q=inp.value.trim(); if(!q) return; S.histQuery=q; render(); window.scrollTo(0,0); };
+  f.onsubmit=e=>{ e.preventDefault(); submit(); };
+  inp.onchange=()=>{ if(S.snap.playerIds.some(i=>i===inp.value)) submit(); };
+  const ys=$('#logYear'); if(ys) ys.onchange=()=>{ S.profileYear=Number(ys.value); render(); };
+};
+function badgeHtml(b){
+  return `<div class="badge ${b.kind}"><div class="med"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${BADGE_ICONS[b.icon]||BADGE_ICONS.chip}</svg></div>
+    ${b.year?`<div class="yr num">${b.year}</div>`:''}<b>${esc(b.title)}</b>${b.sub?`<small>${esc(b.sub)}</small>`:''}</div>`;
+}
+function profileHtml(p){
+  const c=p.career, mine=isMe(p.id), log=p.log[S.profileYear]||[];
+  return `
+  <section class="sheet">
+    <div class="prof-head">${chip(p.years[0]&&p.years[0].rank||'–','big')}<div><h2>${esc(p.id)}</h2><p class="meta">${p.years.length} season${p.years.length===1?'':'s'}, ${c.games} games${p.years[0]&&p.years[0].rank?`, ${ord(p.years[0].rank)} in ${p.years[0].year}`:''}</p></div></div>
+    ${p.badges&&p.badges.length?`<div class="badges" aria-label="Accomplishments">${p.badges.map(badgeHtml).join('')}</div>`:''}
+    <div class="stats num" style="margin-top:12px">
+      <div class="stat"><b>${c.wins}</b><span>wins</span></div>
+      <div class="stat"><b>${c.top3}</b><span>top-3 finishes</span></div>
+      <div class="stat"><b>${c.cashRate}%</b><span>in the money</span></div>
+      <div class="stat"><b>${c.avgPlace}</b><span>avg finish of ${c.avgField}</span></div>
+      <div class="stat"><b>${c.games}</b><span>games</span></div>
+      <div class="stat"><b>${p.toc.length}</b><span>TOC trips</span></div>
+    </div>
+    ${p.money?`<div class="money"><div class="meta">${mine?'Your':'Career'} winnings and losses</div>
+        <div class="big num ${c.net>=0?'pos':'neg'}">${money(c.net,true)}</div>
+        <div class="meta num" style="margin-top:4px">${money(c.won)} won on ${money(c.paid)} in buy-ins, ${c.roi>0?'+':''}${c.roi}% return</div></div>`
+      :`<div class="lock">${S.me&&S.me.role==='player'?'Winnings and losses are private. You can only see your own.':'Winnings and losses are private. <button class="linkish" data-act="signin">Sign in</button> with your Player ID and PIN to see yours.'}</div>`}
+  </section>
+  <section class="sheet">
+    <h2>Season by season</h2>
+    <div class="scrollx" style="margin-top:8px"><table class="t num">
+      <thead><tr><th>Year</th><th class="r">Games</th><th class="r">Wins</th><th class="r">Top 3</th><th class="r">Avg</th><th class="r">Rank</th>${p.money?'<th class="r">Net</th>':''}</tr></thead>
+      <tbody>${p.years.map(s=>`<tr><td><b>${s.year}</b></td><td class="r">${s.games}</td><td class="r">${s.wins}</td><td class="r">${s.top3}</td><td class="r">${s.avgPlace}</td><td class="r">${s.rank?ord(s.rank):''}</td>${p.money?`<td class="r ${s.net>=0?'pos':'neg'}">${money(s.net,true)}</td>`:''}</tr>`).join('')}</tbody>
+    </table></div>
+  </section>
+  <section class="sheet">
+    <div class="spread"><h2>Game log</h2>
+      <select id="logYear" aria-label="Season">${p.years.map(s=>`<option value="${s.year}" ${s.year===S.profileYear?'selected':''}>${s.year}</option>`).join('')}</select></div>
+    <ol class="list" style="margin-top:8px">${log.map(g=>`<li class="li">${chip(g.place)}<div class="grow"><b>${dLong(g.date).replace(/, \d{4}$/,'')}</b><div class="sub num">${ord(g.place)} of ${g.field}, ${g.pts} pts</div></div>${g.win?`<div class="val won num">${money(g.win)}</div>`:''}</li>`).join('')}</ol>
+  </section>`;
+}
+
+/* ===================== Rules ===================== */
+VIEWS.rules=function(){
+  const c=cfg(), st=S.snap.standings[S.snap.currentYear], spots=st.tocSpots;
+  const ex=14;
+  const exRows=[1,2,3,4,5,ex].map(pl=>`<tr><td>${ord(pl)}</td><td class="r">${ex-(pl-1)}</td><td class="r">${pl<=3?'+'+(4-pl):''}</td><td class="r"><b>${pointsFor(ex,pl)}</b></td></tr>`).join('');
+  const tp=(c.tocPayout||[]).map((p,i)=>`${ord(i+1)} ${Math.round(p*100)}%`).join(', ');
+  return `
+  <div class="page-head"><h1>League rules</h1>${acctBtn()}</div>
+  <div class="rules">
+  <section class="sheet">
+    <h2>The game</h2>
+    <p>YeahBuddy Poker is a weekly Texas Hold'em league for family and friends. Games are Thursday nights, played online as a PokerStars Home Game. PokerStars runs the tournament and enforces all game-play rules.</p>
+    <p>A video call is open during games for anyone who wants to watch for tells. It's optional.</p>
+  </section>
+  <section class="sheet">
+    <h2>Buy-in</h2>
+    <ul>
+      <li>Every game is <b>${money(c.buyIn)}</b>, paid on Venmo to <b>${esc(c.venmo)}</b> before the game starts.</li>
+      <li>${money(c.tocFee)} of each buy-in goes to the Tournament of Champions pot.</li>
+      <li>An unpaid buy-in is taken out of any winnings. Players who don't pay are sat out of future games until they're paid up.</li>
+    </ul>
+  </section>
+  <section class="sheet">
+    <h2>Payouts</h2>
+    <p>Winners are paid on Venmo after the game, as a percentage of the money actually collected. How many places are paid depends on how many people play. See the Payouts page for every percentage.</p>
+    <p>If someone never pays, payouts shrink to match. If the money comes in later, the winners are paid the rest.</p>
+    <button class="btn line wide" data-tab="payouts">See payouts</button>
+  </section>
+  <section class="sheet">
+    <h2>Points</h2>
+    <p>You earn one point for every player you finish ahead of, plus one. The top three also get bonus points: 3 for 1st, 2 for 2nd and 1 for 3rd. Missing a game earns zero.</p>
+    <p class="meta" style="margin-top:10px">Example: a ${ex}-player game</p>
+    <table class="t num" style="margin-top:4px"><thead><tr><th>Finish</th><th class="r">Points</th><th class="r">Bonus</th><th class="r">Total</th></tr></thead><tbody>${exRows}</tbody></table>
+  </section>
+  <section class="sheet">
+    <h2>Monthly drop</h2>
+    <p>Your season total is the sum of your monthly totals. In any month with ${c.minGamesForDrop} or more games, if you play every game that month, your lowest score is dropped. Miss a game and that zero is your dropped game.</p>
+  </section>
+  <section class="sheet">
+    <h2>Tournament of Champions</h2>
+    <ul>
+      <li>The top <b>${spots}</b> players in the season standings are invited.</li>
+      <li>The pot is ${money(c.tocFee)} from every buy-in during the season, plus a ${money(c.tocFinalistBuyIn)} buy-in from each finalist.</li>
+      <li>${tp?`The pot has been paid out ${tp}.`:'The top places are paid from the pot.'}</li>
+      <li>The date is set at the end of the season around the finalists' schedules.</li>
+    </ul>
+  </section>
+  <section class="sheet">
+    <h2>Joining</h2>
+    <ol style="padding-left:20px;margin:8px 0 0">
+      <li>Get PokerStars free: pokerstars.net on a computer, or the PokerStars app on your phone.</li>
+      <li>Open <b>Home Games</b>, then <b>Join a Poker Club</b>.</li>
+      <li>Enter Club ID <span class="mono">${esc(c.clubId)}</span> and invitation code <span class="mono">${esc(c.clubCode)}</span>.</li>
+      <li>Wait for the club owner to approve you, then register for the tournament under <b>My Scheduled Tournaments</b>.</li>
+    </ol>
+    <div class="callout">The tournament uses free PokerStars play chips. The Get Free Chips button tops you up every 4 hours. You never have to buy chips, and the real ${money(c.buyIn)} is paid on Venmo.</div>
+  </section>
+  </div>`;
+};
+
+/* ===================== Manager ===================== */
+VIEWS.manager=async function(v,seq){
+  const head=`<div class="page-head"><h1>Manager</h1>${acctBtn()}</div>`;
+  if(!S.mgr){ slow(v,seq,'Opening the books…',head); S.mgr=await call('mgr_overview'); }
+  const tabs={entry:'Enter results',payments:'Payments',players:'Players',money:'Money'};
+  let body='';
+  if(S.mgrTab==='entry') body=entryHtml();
+  if(S.mgrTab==='payments') body=paymentsHtml();
+  if(S.mgrTab==='players') body=playersHtml();
+  if(S.mgrTab==='money'){
+    if(!S.money[S.moneyYear]){ slow(v,seq,'Counting money…',head); S.money[S.moneyYear]=await call('mgr_money',{year:S.moneyYear}); }
+    body=moneyHtml();
+  }
+  return head+`<div class="seg grid2" role="group" aria-label="Manager section" style="margin-bottom:14px">
+      ${Object.keys(tabs).map(k=>`<button data-mgr="${k}" aria-pressed="${S.mgrTab===k}">${tabs[k]}${k==='payments'&&S.mgr.owed.length?` (${S.mgr.owed.length})`:''}</button>`).join('')}
+    </div>`+body;
+};
+AFTER.manager=()=>bindManager();
+const nameOf=id=>{ const p=S.mgr.players.find(x=>x.id.toLowerCase()===String(id).toLowerCase()); return p?[p.first,p.last].filter(Boolean).join(' '):''; };
+
+function entryHtml(){
+  const E=S.entry; if(!E.date) E.date=S.mgr.today;
+  const n=E.rows.length;
+  const opts=S.mgr.players.map(p=>`<option value="${esc(p.id)}">${esc([p.first,p.last].filter(Boolean).join(' '))}</option>`).join('');
+  return `<section class="sheet entry">
+    <h2>${E.editing?'Edit a game':'Enter a game'}</h2>
+    <div class="row" style="margin-top:12px">
+      <div><label class="f" for="gdate">Game date</label><input type="date" id="gdate" value="${E.date}"></div>
+      <div class="meta num" style="align-self:flex-end;padding-bottom:10px">${n?`${n} players, ${money(potFor(n))} pool`:''}</div>
+    </div>
+    ${E.editing?'<div class="banner" style="margin-top:12px">This date already has results. Saving replaces them.</div>':''}
+    ${E.msg?`<div style="margin-top:12px">${E.msg}</div>`:''}
+    <form id="addForm" class="row" style="margin-top:14px" autocomplete="off">
+      <div style="flex:1;min-width:0"><label class="f" for="addId">Add the next finisher</label>
+      <input id="addId" type="search" list="mgrPids" placeholder="Player ID or name" style="width:100%"></div>
+      <datalist id="mgrPids">${opts}</datalist>
+      <button class="btn" type="submit" style="align-self:flex-end">Add</button>
+    </form>
+    <p class="hint">Add players in finishing order, starting with the winner. Someone new? <button class="linkish" data-act="newplayer-entry">Add a new player</button></p>
+    <ol class="list" style="margin-top:6px">
+      ${E.rows.map((r,i)=>{ const pl=i+1, pay=payoutFor(n,pl), nm=nameOf(r.id); return `<li class="li">
+        <span class="place num">${pl}</span>
+        <div class="grow"><b>${esc(r.id)}</b><div class="sub num">${esc(nm)}${nm?', ':''}${pointsFor(n,pl)} pts${pay?`, wins ${money(pay)}`:''}</div>
+          ${r.showNote||r.note?`<input class="note-in" data-note="${i}" type="text" placeholder="Note, e.g. witheld or requested" value="${esc(r.note||'')}">`:''}</div>
+        <div class="ctrls">
+          <label class="paidbox"><input type="checkbox" data-paid="${i}" ${r.paid?'checked':''}>Paid</label>
+          ${!(r.showNote||r.note)?`<button class="icon-btn" data-noteadd="${i}" aria-label="Add a note for ${esc(r.id)}" title="Add note">✎</button>`:''}
+          <button class="icon-btn" data-up="${i}" aria-label="Move ${esc(r.id)} up" ${i===0?'disabled':''}>↑</button>
+          <button class="icon-btn" data-down="${i}" aria-label="Move ${esc(r.id)} down" ${i===n-1?'disabled':''}>↓</button>
+          <button class="icon-btn" data-del="${i}" aria-label="Remove ${esc(r.id)}">✕</button>
+        </div></li>`; }).join('')||'<li class="empty">No players added yet.</li>'}
+    </ol>
+    <div class="row" style="margin-top:14px">
+      <button class="btn red" id="saveGame" ${n<2||E.busy?'disabled':''}>${E.busy?'Saving…':'Save results'}</button>
+      ${E.editing?`<button class="btn line" id="delGame" ${E.busy?'disabled':''}>Delete this game</button>`:''}
+      ${n&&!E.editing?'<button class="linkish" id="clearGame">Start over</button>':''}
+    </div>
+  </section>`;
+}
+function paymentsHtml(){
+  const o=S.mgr.owed, total=o.reduce((a,b)=>a+b.total,0);
+  return `<section class="sheet">
+    <div class="spread"><h2>Who owes</h2><div class="num"><b>${money(total)}</b> outstanding</div></div>
+    ${o.length?o.map(p=>`<div style="margin-top:16px">
+      <div class="spread"><div><b>${esc(p.id)}</b> <span class="meta">${esc(p.name||'')}</span></div><b class="neg num">${money(p.total)}</b></div>
+      ${p.items.map(it=>`<div class="owed-item"><span class="num">${dLong(it.date)}${it.win?`, won ${money(it.win)}`:''}${it.note?` <span class="tag">${esc(it.note)}</span>`:''}</span>
+        <button class="btn small" data-markpaid="${esc(p.id)}|${it.date}">Mark paid</button></div>`).join('')}
+    </div>`).join(''):'<p class="empty">Everyone is paid up.</p>'}
+    <p class="hint">A game counts as unpaid when column G ("paid / due them") is blank for that player.</p>
+  </section>`;
+}
+function playersHtml(){
+  const q=S.playerFilter.toLowerCase();
+  const list=S.mgr.players.filter(p=>!q||[p.id,p.first,p.last,p.email,p.venmo].join(' ').toLowerCase().includes(q));
+  return `<section class="sheet">
+    <div class="spread"><h2>Players</h2><button class="btn red small" data-act="newplayer">Add player</button></div>
+    <input type="search" id="pfilter" placeholder="Search name, ID, email or Venmo" value="${esc(S.playerFilter)}" style="width:100%;margin-top:12px">
+    <ul class="list" style="margin-top:8px">${list.map(p=>`<li class="li" style="flex-wrap:wrap;gap:8px">
+      <div class="grow" style="flex-basis:100%">
+        <b>${esc([p.first,p.last].filter(Boolean).join(' ')||'(no name)')}</b> <span class="meta">${esc(p.id)}</span>
+        <div class="sub">${p.games} games${p.lastPlayed?`, last played ${dMed(p.lastPlayed)}`:''}${p.venmo&&p.venmo!=='N/A'?`, Venmo ${esc(p.venmo)}`:''}${p.email?`, ${esc(p.email)}`:''}${p.unregistered?', <b>no contact details yet</b>':''}</div>
+      </div>
+      <div class="row" style="gap:6px">
+        <span class="tag ${p.hasPin?'on':''}">${p.hasPin?'Has PIN':'No PIN'}</span>
+        <button class="btn small line" data-edit="${esc(p.id)}">Edit</button>
+        <button class="btn small line" data-pin="${esc(p.id)}">${p.hasPin?'New PIN':'Set PIN'}</button>
+      </div>
+    </li>`).join('')}</ul>
+    <p class="hint">A PIN lets a player sign in and see their own winnings and losses. Making a new PIN signs them out everywhere.</p>
+  </section>`;
+}
+function moneyHtml(){
+  const rows=S.money[S.moneyYear]||[];
+  const tot=rows.reduce((a,r)=>({paid:a.paid+r.paid,won:a.won+r.won}),{paid:0,won:0});
+  return `<section class="sheet">
+    <div class="spread"><h2>Money by player</h2>
+      <select id="moneyYear" aria-label="Season"><option value="all" ${S.moneyYear==='all'?'selected':''}>All time</option>${S.snap.years.map(y=>`<option value="${y}" ${String(y)===String(S.moneyYear)?'selected':''}>${y}</option>`).join('')}</select></div>
+    <p class="meta num" style="margin-top:6px">${money(tot.paid)} in buy-ins, ${money(tot.won)} paid out</p>
+    <div class="scrollx" style="margin-top:8px"><table class="t num">
+      <thead><tr><th>Player</th><th class="r">Games</th><th class="r">Paid</th><th class="r">Won</th><th class="r">Net</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr><td><b>${esc(r.id)}</b><div class="meta">${esc(r.name||'')}</div></td><td class="r">${r.games}</td><td class="r">${money(r.paid)}</td><td class="r">${money(r.won)}</td><td class="r ${r.net>=0?'pos':'neg'}">${money(r.net,true)}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <p class="hint">Paid assumes ${money(cfg().buyIn)} for every game played.</p>
+  </section>`;
+}
+function resolveId(raw){
+  const q=raw.trim().toLowerCase(); if(!q) return null;
+  const ps=S.mgr.players;
+  let p=ps.find(x=>x.id.toLowerCase()===q)||ps.find(x=>[x.first,x.last].filter(Boolean).join(' ').toLowerCase()===q);
+  if(!p){ const m=ps.filter(x=>(x.first||'').toLowerCase()===q); if(m.length===1) p=m[0]; }
+  return p?p.id:raw.trim();
+}
+async function loadEntryDate(d){
+  const E=S.entry; E.date=d; E.msg=null; E.rows=[]; E.editing=false;
+  try{ const g=await call('mgr_getGame',{date:d}); if(g.results.length){ E.rows=g.results.map(r=>({id:r.id,paid:r.paid,note:r.note})); E.editing=true; } }
+  catch(e){ E.msg=errBox(e); }
+  render();
+}
+function bindManager(){
+  const E=S.entry;
+  const gd=$('#gdate'); if(gd) gd.onchange=()=>loadEntryDate(gd.value);
+  const af=$('#addForm'); if(af) af.onsubmit=e=>{
+    e.preventDefault(); const id=resolveId($('#addId').value); if(!id) return;
+    if(E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())){ E.msg=errBox(id+' is already on the list.'); return render(); }
+    const known=S.mgr.players.some(p=>p.id.toLowerCase()===id.toLowerCase());
+    E.rows.push({id,paid:true,note:''});
+    E.msg=known?null:`<div class="banner">${esc(id)} isn't a known Player ID. Check the spelling, or <button class="linkish" data-act="newplayer-entry">add them as a new player</button>.</div>`;
+    render().then(()=>{ const i=$('#addId'); if(i) i.focus(); });
+  };
+  const sg=$('#saveGame'); if(sg) sg.onclick=async()=>{
+    E.busy=true; E.msg=null; render();
+    try{
+      const g=await call('mgr_saveGame',{date:E.date,results:E.rows.map((r,i)=>({id:r.id,place:i+1,paid:r.paid,note:r.note||''}))});
+      E.rows=g.results.map(r=>({id:r.id,paid:r.paid,note:r.note})); E.editing=true;
+      E.msg=`<div class="ok">Saved ${g.results.length} results for ${dLong(E.date)}. Standings are updated.</div>`;
+      refreshAll();
+    }catch(e){ E.msg=errBox(e); }
+    E.busy=false; render();
+  };
+  const dg=$('#delGame'); if(dg) dg.onclick=()=>confirmDialog(`Delete the game on ${dLong(E.date)}?`,'This clears every result for that date from the sheet.','Delete game',async()=>{
+    E.busy=true; render();
+    try{ await call('mgr_deleteGame',{date:E.date}); E.rows=[]; E.editing=false; E.msg='<div class="ok">Game deleted.</div>'; refreshAll(); }
+    catch(e){ E.msg=errBox(e); }
+    E.busy=false; render();
+  });
+  const cg=$('#clearGame'); if(cg) cg.onclick=()=>{ E.rows=[]; E.msg=null; render(); };
+  const pf=$('#pfilter'); if(pf) pf.oninput=()=>{ S.playerFilter=pf.value; const pos=pf.selectionStart; render().then(()=>{ const n=$('#pfilter'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } }); };
+  const my=$('#moneyYear'); if(my) my.onchange=()=>{ S.moneyYear=my.value; render(); };
+}
+function playerDialog(existing, onDone){
+  const p=existing||{id:'',first:'',last:'',email:'',venmo:''};
+  openDialog(`<h2>${existing?'Edit '+esc(p.id):'Add a player'}</h2>
+    <form id="pform" style="margin-top:14px" autocomplete="off">
+      <div class="field"><label class="f" for="pf_id">PokerStars Player ID</label><input id="pf_id" type="text" value="${esc(p.id)}" ${existing?'readonly style="background:#F3EFE4"':'required'} autocapitalize="off" autocorrect="off">
+        ${existing?'<p class="hint" style="margin-top:4px">Player IDs can\'t be changed because past results are saved under them.</p>':''}</div>
+      <div class="row"><div class="field" style="flex:1;min-width:140px"><label class="f" for="pf_first">First name</label><input id="pf_first" type="text" value="${esc(p.first||'')}" required></div>
+      <div class="field" style="flex:1;min-width:140px"><label class="f" for="pf_last">Last name</label><input id="pf_last" type="text" value="${esc(p.last||'')}"></div></div>
+      <div class="field"><label class="f" for="pf_email">Email</label><input id="pf_email" type="email" value="${esc(p.email||'')}"></div>
+      <div class="field"><label class="f" for="pf_venmo">Venmo</label><input id="pf_venmo" type="text" value="${esc(p.venmo&&p.venmo!=='N/A'?p.venmo:'')}" autocapitalize="off"></div>
+      <div id="pf_err"></div>
+      <div class="row" style="margin-top:6px"><button class="btn red" type="submit">${existing?'Save changes':'Add player'}</button><button class="btn line" type="button" data-dismiss>Cancel</button></div>
+      <p class="hint">Saved to the "Form Responses 1" sheet. Players never see names, emails or Venmo.</p>
+    </form>`,(root,close)=>{
+      root.querySelector('#pform').onsubmit=async e=>{
+        e.preventDefault();
+        const btn=root.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='Saving…';
+        const a={id:root.querySelector('#pf_id').value.trim(),first:root.querySelector('#pf_first').value,last:root.querySelector('#pf_last').value,email:root.querySelector('#pf_email').value,venmo:root.querySelector('#pf_venmo').value,isNew:!existing};
+        try{ await call('mgr_savePlayer',a); S.mgr=await call('mgr_overview'); close(); if(onDone) onDone(a.id); render(); }
+        catch(err){ root.querySelector('#pf_err').innerHTML=errBox(err); btn.disabled=false; btn.textContent=existing?'Save changes':'Add player'; }
+      };
+    });
+}
+async function refreshAll(){
+  S.weekly={}; S.standings={}; S.profiles={}; S.money={};
+  try{ const s=await call('snapshot'); storeSnap(s); applySnap(s); }catch(e){}
+  try{ S.mgr=await call('mgr_overview'); }catch(e){}
+  if(S.tab!=='manager') render();
+}
+
+/* ===================== dialogs ===================== */
+function openDialog(html,onMount){
+  const root=$('#dialogRoot'), prev=document.activeElement;
+  root.innerHTML=`<div class="scrim" data-close="1"><div class="dialog" role="dialog" aria-modal="true">${html}</div></div>`;
+  const close=()=>{ root.innerHTML=''; document.removeEventListener('keydown',k); if(prev&&prev.focus) prev.focus(); };
+  const k=e=>{ if(e.key==='Escape') close(); };
+  document.addEventListener('keydown',k);
+  root.querySelector('.scrim').addEventListener('click',e=>{ if(e.target.dataset.close||e.target.closest('[data-dismiss]')) close(); });
+  if(onMount) onMount(root,close);
+  const f=root.querySelector('input:not([readonly]),button'); if(f) f.focus();
+}
+function confirmDialog(title,text,okLabel,fn){
+  openDialog(`<h2>${esc(title)}</h2><p style="margin:10px 0 14px">${esc(text)}</p><div class="row"><button class="btn red" id="dlgOk">${esc(okLabel)}</button><button class="btn line" data-dismiss>Cancel</button></div>`,
+    (root,close)=>{ root.querySelector('#dlgOk').onclick=()=>{ close(); fn(); }; });
+}
+function signInDialog(){
+  let kind='player';
+  const draw=(root,close)=>{
+    const d=root.querySelector('.dialog');
+    d.innerHTML=`<h2>Sign in</h2>
+      <div class="seg light" role="group" aria-label="Sign in as" style="margin:14px 0">
+        <button type="button" data-kind="player" aria-pressed="${kind==='player'}">Player</button>
+        <button type="button" data-kind="manager" aria-pressed="${kind==='manager'}">Manager</button></div>
+      <form id="signForm">
+        ${kind==='player'?`
+          <div class="field"><label class="f" for="si_id">Player ID</label><input id="si_id" type="text" list="pids2" autocapitalize="off" autocorrect="off" autocomplete="username" required>
+          <datalist id="pids2">${S.snap.playerIds.map(i=>`<option value="${esc(i)}">`).join('')}</datalist></div>
+          <div class="field"><label class="f" for="si_pin">PIN</label><input id="si_pin" type="password" inputmode="numeric" autocomplete="current-password" required></div>
+          <p class="hint" style="margin-top:-4px">Your PIN comes from the league manager. Signing in lets you see your own winnings and losses.</p>`
+        :`<div class="field"><label class="f" for="si_pw">Manager password</label><input id="si_pw" type="password" autocomplete="current-password" required></div>`}
+        <div id="si_err"></div>
+        <div class="row" style="margin-top:10px"><button class="btn red" type="submit">Sign in</button><button class="btn line" type="button" id="si_cancel">Cancel</button></div>
+      </form>`;
+    d.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{ kind=b.dataset.kind; draw(root,close); });
+    d.querySelector('#si_cancel').onclick=close;
+    const first=d.querySelector('#si_id,#si_pw'); if(first) first.focus();
+    d.querySelector('#signForm').onsubmit=async e=>{
+      e.preventDefault();
+      const btn=d.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='Signing in…';
+      try{
+        const r=await call('login',kind==='player'?{kind,id:d.querySelector('#si_id').value,pin:d.querySelector('#si_pin').value}:{kind,password:d.querySelector('#si_pw').value});
+        S.token=r.token; store.set('ybp_token',r.token); store.set('ybp_me',JSON.stringify({role:r.role,id:r.id||''}));
+        S.me={role:r.role,id:r.id||''}; S.profiles={}; S.histQuery=r.id||''; S.mgr=null;
+        close(); renderTabs(); go(r.role==='manager'?'manager':'history');
+      }catch(err){ d.querySelector('#si_err').innerHTML=errBox(err); btn.disabled=false; btn.textContent='Sign in'; }
+    };
+  };
+  openDialog('',draw);
+}
+function accountDialog(){
+  openDialog(`<h2>${isMgr()?'Signed in as manager':'Signed in as '+esc(S.me.id)}</h2>
+    <div class="row" style="margin-top:16px">${!isMgr()?'<button class="btn" data-act="mystats">My history</button>':''}<button class="btn line" data-act="signout">Sign out</button></div>`);
+}
+function signOut(){
+  S.token=null; S.me=null; store.set('ybp_token',null); store.set('ybp_me',null);
+  S.mgr=null; S.profiles={}; S.histQuery=''; $('#dialogRoot').innerHTML=''; renderTabs(); go('home');
+}
+function pinDialog(id){
+  confirmDialog(`Make a new PIN for ${id}?`,'Any PIN they had stops working.','Make PIN',async()=>{
+    try{
+      const r=await call('mgr_setPin',{id});
+      const msg=`Your YeahBuddy Poker sign-in: Player ID ${r.id}, PIN ${r.pin}. ${location.href.split('#')[0]}`;
+      openDialog(`<h2>PIN for ${esc(r.id)}</h2><div class="pin num">${r.pin}</div>
+        <p>Send this to the player. It won't be shown again.</p>
+        <div class="row" style="margin-top:14px"><button class="btn" id="copyPin">Copy message</button><button class="btn line" data-dismiss>Done</button></div>`,
+        root=>{ root.querySelector('#copyPin').onclick=async e=>{ try{ await navigator.clipboard.writeText(msg); e.target.textContent='Copied'; }catch(_){ e.target.textContent='Copy blocked: write it down'; } }; });
+      S.mgr=await call('mgr_overview'); if(S.tab==='manager') render();
+    }catch(e){ openDialog(`${errBox(e)}<div class="row" style="margin-top:12px"><button class="btn" data-dismiss>OK</button></div>`); }
+  });
+}
+
+/* ===================== events ===================== */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('button'); if(!t||t.closest('#dialogRoot')&&!t.dataset.act) return;
+  const d=t.dataset;
+  if(d.tab){ $('#dialogRoot').innerHTML=''; return go(d.tab); }
+  if(d.act==='signin') return signInDialog();
+  if(d.act==='account') return accountDialog();
+  if(d.act==='signout') return signOut();
+  if(d.act==='mystats'){ $('#dialogRoot').innerHTML=''; S.histQuery=S.me.id; return go('history'); }
+  if(d.act==='newplayer') return playerDialog(null);
+  if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,paid:true,note:''}); E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
+  if(d.goto==='season'){ S.standMode='season'; S.year=S.snap.currentYear; return go('standings'); }
+  if(d.goto==='week'){ S.standMode='week'; S.year=S.snap.currentYear; S.weekIdx=0; return go('standings'); }
+  if(d.mode){ S.standMode=d.mode; return render(); }
+  if(d.nav) return stepPeriod(Number(d.nav));
+  if(d.step){ S.players=Math.max(2,Math.min(50,S.players+Number(d.step))); return render(); }
+  if(d.pid){ S.histQuery=d.pid; S.profileYear=null; return go('history'); }
+  if(d.mgr){ S.mgrTab=d.mgr; return render(); }
+  const E=S.entry;
+  if(d.up!=null){ const i=+d.up; [E.rows[i-1],E.rows[i]]=[E.rows[i],E.rows[i-1]]; return render(); }
+  if(d.down!=null){ const i=+d.down; [E.rows[i+1],E.rows[i]]=[E.rows[i],E.rows[i+1]]; return render(); }
+  if(d.del!=null){ E.rows.splice(+d.del,1); return render(); }
+  if(d.noteadd!=null){ E.rows[+d.noteadd].showNote=true; await render(); const n=document.querySelector(`[data-note="${d.noteadd}"]`); if(n) n.focus(); return; }
+  if(d.pin) return pinDialog(d.pin);
+  if(d.edit){ const p=S.mgr.players.find(x=>x.id===d.edit); return playerDialog(p); }
+  if(d.markpaid){
+    const [id,date]=d.markpaid.split('|'); t.disabled=true; t.textContent='Saving…';
+    try{ await call('mgr_setPaid',{id,date,paid:true}); S.mgr=await call('mgr_overview'); render(); }
+    catch(err){ t.disabled=false; t.textContent='Mark paid'; openDialog(`${errBox(err)}<div class="row" style="margin-top:12px"><button class="btn" data-dismiss>OK</button></div>`); }
+  }
+});
+document.addEventListener('change',e=>{ const t=e.target; if(t.dataset.paid!=null) S.entry.rows[+t.dataset.paid].paid=t.checked; });
+document.addEventListener('input',e=>{ const t=e.target; if(t.dataset.note!=null) S.entry.rows[+t.dataset.note].note=t.value; });
+document.addEventListener('keydown',e=>{
+  if(S.tab!=='standings'||/INPUT|SELECT|TEXTAREA/.test((e.target.tagName||''))||$('#dialogRoot').innerHTML) return;
+  if(e.key==='ArrowLeft') stepPeriod(-1); if(e.key==='ArrowRight') stepPeriod(1);
+});
+
+/* ===================== start: show saved data instantly, then refresh ===================== */
+function storeSnap(s){ const c=Object.assign({},s); delete c.me; store.set(SNAP_KEY,JSON.stringify(c)); }
+(async function start(){
+  S.token=store.get('ybp_token');
+  try{ S.me=JSON.parse(store.get('ybp_me')||'null'); }catch(e){ S.me=null; }
+  let cached=null; try{ cached=JSON.parse(store.get(SNAP_KEY)||'null'); }catch(e){}
+  if(cached){ applySnap(cached); renderTabs(); render(); $('#refresh').classList.remove('hide'); }
+  else { renderTabs(); render(); }
+  try{
+    const s=await call('snapshot');
+    if(S.token&&!s.me){ S.token=null; S.me=null; store.set('ybp_token',null); store.set('ybp_me',null); }
+    else if(s.me){ S.me=s.me; store.set('ybp_me',JSON.stringify(s.me)); }
+    const changed=!cached||cached.builtAt!==s.builtAt;
+    storeSnap(s); applySnap(s);
+    if(changed||!cached){ S.weekly={}; S.standings={}; applySnap(s); renderTabs(); if(!$('#dialogRoot').innerHTML) render(); }
+    else renderTabs();
+  }catch(e){
+    if(!cached) $('#view').innerHTML=`<div class="sheet" style="margin-top:20px">${errBox(e)}<p class="hint">Reload the page to try again.</p></div>`;
+  }
+  $('#refresh').classList.add('hide');
+})();
+</script>
 </body>
 </html>
