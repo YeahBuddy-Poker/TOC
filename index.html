@@ -66,6 +66,11 @@ main{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top))
 .tagline{color:var(--felt-text);font-size:14px;margin-top:6px}
 .hero .acct{position:absolute;top:-30px;right:0}
 
+.potline{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;width:100%;text-align:left;border-radius:16px;padding:12px 16px;margin-bottom:16px;
+  background:linear-gradient(135deg,#123F31 0%,#0B3428 100%);border:1.5px solid var(--brass);color:var(--ivory)}
+.potline .lbl{flex-basis:100%;color:var(--brass);font-weight:700;font-size:14px}
+.potline .amt{font:800 40px/1 var(--display);letter-spacing:-.02em}
+.potline .grow{font:600 20px/1 var(--display);color:var(--felt-text)}
 .pot{border-radius:18px;padding:16px;margin-bottom:16px;color:var(--ivory);
   background:linear-gradient(135deg,#123F31 0%,#0B3428 100%);border:1.5px solid var(--brass);position:relative;overflow:hidden}
 .pot .lbl{color:var(--brass);font-weight:700;font-size:15px}
@@ -135,6 +140,12 @@ label.f{display:block;font-weight:700;font-size:14px;margin-bottom:4px}
 .li .val small{display:block;font-weight:400;color:var(--mute);font-size:12px}
 .li.me{background:#FFF1C9;margin:0 -16px;padding-left:16px;padding-right:16px}
 .won{color:var(--good);font-weight:700}
+.cols{display:flex;gap:12px;padding:0 0 6px 50px;margin-top:10px;border-bottom:2px solid var(--rule);font-size:12px;font-weight:700;color:var(--mute)}
+.cols span:first-child{flex:1}
+.li .c,.cols .c{flex:none;width:52px;text-align:right;font-weight:700}
+.li .c.w,.cols .c.w{width:70px}
+.li .c.w{color:var(--good)}
+.li .c.zero{color:#B9B09A;font-weight:400}
 .cut{display:flex;align-items:center;gap:10px;margin:6px 0;color:var(--brass-deep);font-weight:700;font-size:13px;text-align:center}
 .cut::before,.cut::after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--brass) 0 8px,transparent 8px 13px)}
 table.t{width:100%;border-collapse:collapse;font-size:15px}
@@ -147,9 +158,9 @@ table.t th.hl{color:var(--ink)}
 .sticky1 th:first-child,.sticky1 td:first-child{position:sticky;left:0;background:var(--paper);z-index:1}
 
 /* ---------- stats / money ---------- */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .stat{background:var(--sand);border-radius:12px;padding:10px 10px 9px}
-.stat b{display:block;font:800 24px/1.05 var(--display)}
+.stat b{display:block;font:800 22px/1.05 var(--display);overflow-wrap:anywhere}
 .stat span{font-size:13px;color:var(--mute)}
 .money{border:2px solid var(--ink);border-radius:14px;padding:14px;margin-top:14px}
 .money .big{font:800 34px/1 var(--display)}
@@ -165,16 +176,16 @@ table.t th.hl{color:var(--ink)}
 .prof-head{display:flex;align-items:center;gap:14px}
 .prof-head h2{font-size:28px;overflow-wrap:anywhere}
 
-.badges{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:16px -16px 2px;padding:2px 16px 10px;scrollbar-width:thin}
-.badge{scroll-snap-align:start;flex:none;width:128px;border-radius:16px;padding:12px 10px 11px;text-align:center;background:var(--sand);border:1.5px solid var(--rule)}
-.badge .med{width:58px;height:58px;margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;color:#fff;
+.badges{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:16px -16px 2px;padding:2px 16px 10px;scrollbar-width:thin}
+.badge{scroll-snap-align:start;flex:none;width:96px;border-radius:12px;padding:8px 6px 8px;text-align:center;background:var(--sand);border:1.5px solid var(--rule)}
+.badge .med{width:38px;height:38px;margin:0 auto 5px;border-radius:50%;display:grid;place-items:center;color:#fff;
   --m:var(--felt);--r:#fff;
   background:radial-gradient(circle,var(--m) 0 55%,transparent 56%),repeating-conic-gradient(var(--r) 0 20deg,var(--m) 20deg 40deg);
-  box-shadow:0 0 0 2px var(--m)}
-.badge .med svg{width:26px;height:26px}
-.badge b{display:block;font:800 15px/1.15 var(--display)}
-.badge .yr{font:800 20px/1.2 var(--display);color:var(--ink)}
-.badge small{display:block;font-size:12px;color:var(--mute);line-height:1.3;margin-top:2px}
+  box-shadow:0 0 0 1.5px var(--m)}
+.badge .med svg{width:18px;height:18px}
+.badge b{display:block;font:800 12.5px/1.15 var(--display)}
+.badge .yr{font:800 15px/1.2 var(--display);color:var(--ink)}
+.badge small{display:block;font-size:11px;color:var(--mute);line-height:1.3;margin-top:2px}
 .badge.gold{background:#FBEFD3;border-color:var(--brass)}
 .badge.gold .med{--m:var(--brass);--r:#FFF6DD;color:var(--ink)}
 .badge.red .med{--m:var(--chip);--r:#fff}
@@ -227,29 +238,18 @@ nav.tabs button[aria-current=page]{color:var(--chip-deep);background:#F6EBD3}
 @keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 .pin{font:800 54px/1 var(--display);letter-spacing:.12em;margin:10px 0}
 
-/* ---------- loader: chips dropping onto a stack ---------- */
-.loader{display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 0;color:var(--felt-text)}
-.loader.inpaper{color:var(--mute);padding:22px 0}
-.stack{position:relative;width:64px;height:76px}
-.stack i{position:absolute;left:4px;width:56px;height:16px;border-radius:50%;
-  background:repeating-linear-gradient(90deg,var(--chip) 0 9px,#fff 9px 13px);
-  box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 2px 0 var(--chip-deep);opacity:0;
-  animation:drop 2s cubic-bezier(.3,.7,.4,1) infinite}
-.stack i:nth-child(1){bottom:0;animation-delay:0s}
-.stack i:nth-child(2){bottom:13px;animation-delay:.25s;background:repeating-linear-gradient(90deg,var(--ink) 0 9px,#fff 9px 13px);box-shadow:inset 0 -3px 0 rgba(0,0,0,.3),0 2px 0 #000}
-.stack i:nth-child(3){bottom:26px;animation-delay:.5s;background:repeating-linear-gradient(90deg,var(--brass) 0 9px,#fff 9px 13px);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 2px 0 var(--brass-deep)}
-.stack i:nth-child(4){bottom:39px;animation-delay:.75s}
-.stack i:nth-child(5){bottom:52px;animation-delay:1s;background:repeating-linear-gradient(90deg,var(--felt) 0 9px,#fff 9px 13px);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 2px 0 var(--felt-deep)}
-@keyframes drop{
-  0%{transform:translateY(-60px);opacity:0}
-  12%{transform:translateY(0);opacity:1}
-  16%{transform:translateY(-3px)}
-  20%,78%{transform:translateY(0);opacity:1}
-  90%,100%{transform:translateY(0);opacity:0}
-}
+/* ---------- loader: poker-chip shuffle (Lottie), with a spinning chip until it loads ---------- */
+.loader{display:flex;flex-direction:column;align-items:center;gap:10px;padding:30px 0;color:var(--felt-text)}
+.loader.inpaper{color:var(--mute);padding:18px 0}
+.loader .anim{width:150px;height:150px;display:grid;place-items:center}
+.loader .anim svg{width:100%!important;height:100%!important}
+.spinchip{width:64px;height:64px;border-radius:50%;
+  background:radial-gradient(circle,var(--chip) 0 52%,#fff 53% 57%,transparent 58%),repeating-conic-gradient(#fff 0 22.5deg,var(--chip) 22.5deg 45deg);
+  box-shadow:0 0 0 3px var(--chip-deep);animation:flip 1.4s ease-in-out infinite}
+@keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(180deg)}100%{transform:rotateY(360deg)}}
 .loader p{font-weight:700}
 @media (prefers-reduced-motion:reduce){
-  .stack i{animation:none;opacity:1}
+  .spinchip{animation:none}
   .dialog{animation:none}
 }
 .refreshing{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--ivory);
@@ -341,14 +341,65 @@ function money(n,signed){
 }
 function ord(n){ const s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
 const chip=(n,extra)=>`<span class="chip ${n<=3?'p'+n:''} ${extra||''}" aria-label="${ord(n)}">${n}</span>`;
+const COLS=`<div class="cols" aria-hidden="true"><span>Player</span><span class="c">Points</span><span class="c w">Winnings</span></div>`;
+const wonCell=w=>w?`<div class="c w num">${money(w)}</div>`:`<div class="c w zero">–</div>`;
+const boardRow=(rank,id,sub,pts,won,chipCls)=>`<li class="li ${isMe(id)?'me':''}">${chip(rank,chipCls)}<div class="grow">${pid(id)}${sub?`<div class="sub num">${sub}</div>`:''}</div><div class="c num">${pts}</div>${wonCell(won)}</li>`;
 const pid=id=>id?`<button class="pid" data-pid="${esc(id)}">${esc(id)}</button>`:'<span class="meta">Player not matched</span>';
 const isMe=id=>S.me&&S.me.id&&String(S.me.id).toLowerCase()===String(id).toLowerCase();
 const isMgr=()=>S.me&&S.me.role==='manager';
 const errBox=e=>`<div class="err">${esc(e.message||e)}</div>`;
 const LOAD_MSG=['Shuffling up…','Stacking chips…','Counting the pot…','Dealing the cards…'];
-const loader=(msg,paper)=>`<div class="loader ${paper?'inpaper':''}" role="status"><div class="stack" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><p>${esc(msg||LOAD_MSG[Math.floor(Math.random()*LOAD_MSG.length)])}</p></div>`;
+const loader=(msg,paper)=>`<div class="loader ${paper?'inpaper':''}" role="status"><div class="anim" aria-hidden="true"><span class="spinchip"></span></div><p>${esc(msg||LOAD_MSG[Math.floor(Math.random()*LOAD_MSG.length)])}</p></div>`;
 const ARROW_L='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
 const ARROW_R='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+
+/* ===================== loading animation =====================
+   Plays the "Poker Chip Shuffle" Lottie animation (by Chan, LottieFiles, Lottie Simple License).
+   If you upload the animation's Lottie JSON to the repo as chip-shuffle.json, that copy is used;
+   otherwise it's fetched from LottieFiles. Until it's ready, a spinning chip shows. */
+const LOTTIE_SOURCES=['chip-shuffle.json','https://assets-v2.lottiefiles.com/a/0fa83084-e535-11ef-a1d5-ab864b5862bb/ucqpMUSzZG.lottie'];
+let lottieData=null, lottieJob=null;
+const noMotion=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function loadScript(src){ return new Promise((ok,bad)=>{ const el=document.createElement('script'); el.src=src; el.onload=ok; el.onerror=bad; document.head.appendChild(el); }); }
+function getLottie(){
+  if(lottieData) return Promise.resolve(lottieData);
+  if(lottieJob) return lottieJob;
+  lottieJob=(async()=>{
+    if(!window.lottie) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js');
+    for(const src of LOTTIE_SOURCES){
+      try{
+        const r=await fetch(src); if(!r.ok) continue;
+        if(/\.json$/.test(src)){ lottieData=await r.json(); return lottieData; }
+        if(!window.JSZip) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+        const zip=await JSZip.loadAsync(await r.arrayBuffer());
+        const name=Object.keys(zip.files).find(n=>/^(animations|a)\/[^/]+\.json$/.test(n));
+        if(!name) continue;
+        const data=JSON.parse(await zip.file(name).async('string'));
+        for(const a of (data.assets||[])){
+          if(!a.p||a.e===1||/^data:/.test(a.p)) continue;
+          const f=zip.file('images/'+a.p)||zip.file('i/'+a.p);
+          if(f){ const ext=(a.p.split('.').pop()||'png').toLowerCase(); a.p='data:image/'+(ext==='jpg'?'jpeg':ext)+';base64,'+await f.async('base64'); a.u=''; a.e=1; }
+        }
+        lottieData=data; return data;
+      }catch(e){ /* try the next source */ }
+    }
+    throw new Error('animation unavailable');
+  })();
+  lottieJob.catch(()=>{ lottieJob=null; });
+  return lottieJob;
+}
+function mountLoaders(){
+  if(noMotion()) return;
+  document.querySelectorAll('.loader .anim:not([data-on])').forEach(box=>{
+    box.dataset.on='1';
+    getLottie().then(data=>{
+      if(!box.isConnected) return;
+      box.innerHTML='';
+      window.lottie.loadAnimation({container:box,renderer:'svg',loop:true,autoplay:true,animationData:JSON.parse(JSON.stringify(data))});
+    }).catch(()=>{ /* keep the spinning chip */ });
+  });
+}
+new MutationObserver(()=>mountLoaders()).observe(document.getElementById('view'),{childList:true,subtree:true});
 
 /* ===================== payout math (mirrors the sheet) ===================== */
 const cfg=()=>S.snap.config;
@@ -427,9 +478,8 @@ VIEWS.home=function(){
   const rows=[];
   top.forEach((p,i)=>{
     if(i>0&&top[i-1].rank<=st.tocSpots&&p.rank>st.tocSpots) rows.push(`<li class="cut" aria-hidden="true">Top ${st.tocSpots} make the Tournament of Champions</li>`);
-    rows.push(`<li class="li ${isMe(p.id)?'me':''}">${chip(p.rank,p.rank<=st.tocSpots&&p.rank>3?'toc':'')}<div class="grow">${pid(p.id)}<div class="sub num">${p.games} games</div></div><div class="val num">${p.pts}<small>points</small></div></li>`);
+    rows.push(boardRow(p.rank,p.id,p.games+' games',p.pts,p.won,p.rank<=st.tocSpots&&p.rank>3?'toc':''));
   });
-  const split=(c.tocPayout||[]).map((p,i)=>`<div>${ord(i+1)}<b class="num">${money(Math.round(pot.projected*p))}</b></div>`).join('');
   let latest='';
   if(g){
     const r=g.results, at=i=>r[i]||null;
@@ -438,7 +488,7 @@ VIEWS.home=function(){
       <h2>Latest tournament</h2>
       <p class="meta num" style="margin-top:4px">${dLong(g.date)}. ${g.players} players, ${money(g.pot)} prize pool.</p>
       <div class="podium">${step(at(1),'')}${step(at(0),'first')}${step(at(2),'')}</div>
-      <ol class="list" start="4">${r.slice(3).map(x=>`<li class="li ${isMe(x.id)?'me':''}">${chip(x.place)}<div class="grow">${pid(x.id)}</div><div class="val num">${x.pts}<small>pts</small></div>${x.win?`<div class="val won num">${money(x.win)}</div>`:''}</li>`).join('')}</ol>
+      ${r.length>3?COLS:''}<ol class="list" start="4">${r.slice(3).map(x=>boardRow(x.place,x.id,'',x.pts,x.win,'')).join('')}</ol>
       <button class="btn line wide" data-goto="week">All weekly results</button>
     </section>`;
   }
@@ -448,15 +498,13 @@ VIEWS.home=function(){
     <div><h1 class="brand">YeahBuddy<span>Poker</span></h1><p class="tagline">Thursday night league on PokerStars</p></div>
     ${acctBtn()}
   </header>
-  <section class="pot">
-    <div class="lbl">${pot.year} Tournament of Champions pot</div>
-    <div class="amt num">${money(pot.collected)}</div>
-    <p>${money(c.tocFee)} from each of ${pot.entries} buy-ins so far. When the top ${st.tocSpots} each add their ${money(c.tocFinalistBuyIn)} buy-in, it grows to <b style="color:var(--ivory)">${money(pot.projected)}</b>.</p>
-    ${split?`<div class="splits">${split}</div>`:''}
-  </section>
+  <button class="potline" data-goto="pot" aria-label="${pot.year} Tournament of Champions pot ${money(pot.collected)} and growing. See details on the Payouts page.">
+    <span class="lbl">${pot.year} Tournament Of Champions pot</span>
+    <span class="amt num">${money(pot.collected)}</span><span class="grow">and growing</span>
+  </button>
   <section class="sheet">
     <div class="spread"><h2>${y} leaderboard</h2>${st.lastGame?`<span class="meta">Through ${dShort(st.lastGame)}</span>`:''}</div>
-    <ol class="list" style="margin-top:8px">${rows.join('')||'<li class="empty">The season hasn\'t started yet.</li>'}</ol>
+    ${COLS}<ol class="list">${rows.join('')||'<li class="empty">The season hasn\'t started yet.</li>'}</ol>
     <button class="btn wide" data-goto="season">View more</button>
   </section>
   ${latest}`;
@@ -488,7 +536,7 @@ VIEWS.standings=async function(v,seq){
     return head+navBar(opts,S.weekIdx,canPrev,canNext)+`<section class="sheet" data-swipe>
       ${!g?`<p class="empty">No games in ${y}.</p>`:`
       <h2>${dLong(g.date)}</h2><p class="meta num" style="margin-top:4px">${g.players} players, ${money(g.pot)} prize pool</p>
-      <ol class="list" style="margin-top:10px">${g.results.map(r=>`<li class="li ${isMe(r.id)?'me':''}">${chip(r.place)}<div class="grow">${pid(r.id)}<div class="sub num">${r.pts} pts</div></div>${r.win?`<div class="val won num">${money(r.win)}</div>`:''}</li>`).join('')}</ol>`}
+      ${COLS}<ol class="list">${g.results.map(r=>boardRow(r.place,r.id,'',r.pts,r.win,'')).join('')}</ol>`}
     </section>`;
   }
   if(mode==='month'){
@@ -505,7 +553,7 @@ VIEWS.standings=async function(v,seq){
     const opts=st.months.map(m=>({v:m.m,t:MONTHS_LONG[Number(m.m)-1]+' '+y}));
     return head+navBar(opts,S.month,mi>0||y>oldest,mi<st.months.length-1||y<newest)+`<section class="sheet" data-swipe>
       <h2>${MONTHS_LONG[Number(M.m)-1]} ${y}</h2><p class="meta num" style="margin-top:4px">${M.games} games this month</p>
-      <ol class="list" style="margin-top:8px">${list.map(p=>`<li class="li ${isMe(p.id)?'me':''}">${chip(p.rank)}<div class="grow">${pid(p.id)}<div class="sub num">${p.games} of ${M.games} games${p.dropped!=null?`, dropped a ${p.dropped}`:''}</div></div><div class="val num">${p.pts}<small>points</small></div></li>`).join('')}</ol>
+      ${COLS}<ol class="list">${list.map(p=>boardRow(p.rank,p.id,`${p.games} of ${M.games} games${p.dropped!=null?`, dropped a ${p.dropped}`:''}`,p.pts,p.won,'')).join('')}</ol>
       <p class="hint">In a month with ${cfg().minGamesForDrop} or more games, players who play every game drop their lowest score.</p>
     </section>`;
   }
@@ -514,12 +562,12 @@ VIEWS.standings=async function(v,seq){
   const rows=[];
   st.players.forEach((p,i)=>{
     if(i>0&&st.players[i-1].rank<=st.tocSpots&&p.rank>st.tocSpots) rows.push(`<li class="cut" aria-hidden="true">Top ${st.tocSpots} ${st.isCurrent?'make':'made'} the Tournament of Champions</li>`);
-    rows.push(`<li class="li ${isMe(p.id)?'me':''}">${chip(p.rank,p.rank<=st.tocSpots&&p.rank>3?'toc':'')}<div class="grow">${pid(p.id)}<div class="sub num">${p.games} games</div></div><div class="val num">${p.pts}<small>points</small></div></li>`);
+    rows.push(boardRow(p.rank,p.id,p.games+' games',p.pts,p.won,p.rank<=st.tocSpots&&p.rank>3?'toc':''));
   });
   return head+navBar(years.map(x=>({v:x,t:x+' season'})),y,y>oldest,y<newest)+`<section class="sheet" data-swipe>
     <h2>${st.isCurrent?y+' season so far':y+' final standings'}</h2>
     ${st.lastGame&&st.isCurrent?`<p class="meta" style="margin-top:4px">Through ${dShort(st.lastGame)}</p>`:''}
-    <ol class="list" style="margin-top:8px">${rows.join('')||'<li class="empty">No points yet.</li>'}</ol>
+    ${COLS}<ol class="list">${rows.join('')||'<li class="empty">No points yet.</li>'}</ol>
   </section>`;
 };
 AFTER.standings=function(){
@@ -590,8 +638,19 @@ VIEWS.payouts=function(){
       <tbody>${Array.from({length:maxPl},(_,i)=>`<tr><td><b>${ord(i+1)}</b></td>${brs.map(br=>`<td class="r ${br===b?'hl':''}">${br.pct[i]!=null?+(br.pct[i]*100).toFixed(2)+'%':''}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div>
     <p class="hint">Column headings are the number of players in the game.</p>
-  </section>`;
+  </section>
+  ${potHtml()}`;
 };
+function potHtml(){
+  const pot=S.snap.tocPot, c=cfg(), spots=S.snap.standings[S.snap.currentYear].tocSpots;
+  const split=(c.tocPayout||[]).map((p,i)=>`<div>${ord(i+1)}<b class="num">${money(Math.round(pot.projected*p))}</b></div>`).join('');
+  return `<section class="pot" id="toc-pot">
+    <div class="lbl">${pot.year} Tournament of Champions pot</div>
+    <div class="amt num">${money(pot.collected)}</div>
+    <p>${money(c.tocFee)} from each of ${pot.entries} buy-ins so far. When the top ${spots} each add their ${money(c.tocFinalistBuyIn)} buy-in, it grows to <b style="color:var(--ivory)">${money(pot.projected)}</b>.</p>
+    ${split?`<p style="margin-top:12px">Projected payouts</p><div class="splits">${split}</div>`:''}
+  </section>`;
+}
 
 /* ===================== History ===================== */
 VIEWS.history=async function(v,seq){
@@ -614,49 +673,58 @@ VIEWS.history=async function(v,seq){
     <h2>Tournament of Champions</h2>
     ${toc.length?toc.map((t,i)=>`<details ${i===0&&!p?'open':''} style="margin-top:12px"><summary><b>${t.year}</b>${t.results[0]&&t.results[0].id?`: won by ${esc(t.results[0].id)}`:''}</summary>
       <ol class="list">${t.results.map(r=>`<li class="li ${isMe(r.id)?'me':''}">${chip(r.place,r.place>3?'toc':'')}<div class="grow">${pid(r.id)}</div>${r.win?`<div class="val won num">${money(r.win)}</div>`:''}</li>`).join('')}</ol></details>`).join(''):'<p class="empty">No results yet.</p>'}
-  </section>`;
+  </section>
+  ${p?gameLogHtml(p):''}`;
 };
 AFTER.history=function(){
   const f=$('#lookup'), inp=$('#pidIn');
   const submit=()=>{ const q=inp.value.trim(); if(!q) return; S.histQuery=q; render(); window.scrollTo(0,0); };
   f.onsubmit=e=>{ e.preventDefault(); submit(); };
   inp.onchange=()=>{ if(S.snap.playerIds.some(i=>i===inp.value)) submit(); };
-  const ys=$('#logYear'); if(ys) ys.onchange=()=>{ S.profileYear=Number(ys.value); render(); };
+  const ys=$('#logYear'); if(ys) ys.onchange=()=>{ S.profileYear=Number(ys.value); S.logAll=false; render(); };
 };
 function badgeHtml(b){
   return `<div class="badge ${b.kind}"><div class="med"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${BADGE_ICONS[b.icon]||BADGE_ICONS.chip}</svg></div>
     ${b.year?`<div class="yr num">${b.year}</div>`:''}<b>${esc(b.title)}</b>${b.sub?`<small>${esc(b.sub)}</small>`:''}</div>`;
 }
 function profileHtml(p){
-  const c=p.career, mine=isMe(p.id), log=p.log[S.profileYear]||[];
+  const c=p.career, mine=isMe(p.id);
   return `
   <section class="sheet">
     <div class="prof-head">${chip(p.years[0]&&p.years[0].rank||'–','big')}<div><h2>${esc(p.id)}</h2><p class="meta">${p.years.length} season${p.years.length===1?'':'s'}, ${c.games} games${p.years[0]&&p.years[0].rank?`, ${ord(p.years[0].rank)} in ${p.years[0].year}`:''}</p></div></div>
     ${p.badges&&p.badges.length?`<div class="badges" aria-label="Accomplishments">${p.badges.map(badgeHtml).join('')}</div>`:''}
     <div class="stats num" style="margin-top:12px">
+      <div class="stat"><b>${money(c.won)}</b><span>total winnings</span></div>
+      <div class="stat"><b>${c.avgPts}</b><span>avg points per game</span></div>
       <div class="stat"><b>${c.wins}</b><span>wins</span></div>
       <div class="stat"><b>${c.top3}</b><span>top-3 finishes</span></div>
       <div class="stat"><b>${c.cashRate}%</b><span>in the money</span></div>
       <div class="stat"><b>${c.avgPlace}</b><span>avg finish of ${c.avgField}</span></div>
       <div class="stat"><b>${c.games}</b><span>games</span></div>
       <div class="stat"><b>${p.toc.length}</b><span>TOC trips</span></div>
+      <div class="stat"><b>${p.years.length}</b><span>seasons</span></div>
     </div>
-    ${p.money?`<div class="money"><div class="meta">${mine?'Your':'Career'} winnings and losses</div>
+    ${p.money?`<div class="money"><div class="meta">${mine?'Your':'Career'} profit after buy-ins</div>
         <div class="big num ${c.net>=0?'pos':'neg'}">${money(c.net,true)}</div>
         <div class="meta num" style="margin-top:4px">${money(c.won)} won on ${money(c.paid)} in buy-ins, ${c.roi>0?'+':''}${c.roi}% return</div></div>`
-      :`<div class="lock">${S.me&&S.me.role==='player'?'Winnings and losses are private. You can only see your own.':'Winnings and losses are private. <button class="linkish" data-act="signin">Sign in</button> with your Player ID and PIN to see yours.'}</div>`}
+      :`<div class="lock">${S.me&&S.me.role==='player'?'Profit after buy-ins is private. You can only see your own.':'Profit after buy-ins is private. <button class="linkish" data-act="signin">Sign in</button> with your Player ID and PIN to see yours.'}</div>`}
   </section>
   <section class="sheet">
     <h2>Season by season</h2>
     <div class="scrollx" style="margin-top:8px"><table class="t num">
-      <thead><tr><th>Year</th><th class="r">Games</th><th class="r">Wins</th><th class="r">Top 3</th><th class="r">Avg</th><th class="r">Rank</th>${p.money?'<th class="r">Net</th>':''}</tr></thead>
-      <tbody>${p.years.map(s=>`<tr><td><b>${s.year}</b></td><td class="r">${s.games}</td><td class="r">${s.wins}</td><td class="r">${s.top3}</td><td class="r">${s.avgPlace}</td><td class="r">${s.rank?ord(s.rank):''}</td>${p.money?`<td class="r ${s.net>=0?'pos':'neg'}">${money(s.net,true)}</td>`:''}</tr>`).join('')}</tbody>
+      <thead><tr><th>Year</th><th class="r">Rank</th><th class="r">Games</th><th class="r">Pts/game</th><th class="r">Winnings</th><th class="r">Wins</th><th class="r">Avg finish</th>${p.money?'<th class="r">Profit</th>':''}</tr></thead>
+      <tbody>${p.years.map(s=>`<tr><td><b>${s.year}</b></td><td class="r">${s.rank?ord(s.rank):''}</td><td class="r">${s.games}</td><td class="r">${s.avgPts}</td><td class="r won">${s.won?money(s.won):'–'}</td><td class="r">${s.wins}</td><td class="r">${s.avgPlace}</td>${p.money?`<td class="r ${s.net>=0?'pos':'neg'}">${money(s.net,true)}</td>`:''}</tr>`).join('')}</tbody>
     </table></div>
-  </section>
-  <section class="sheet">
+  </section>`;
+}
+function gameLogHtml(p){
+  const log=p.log[S.profileYear]||[], shown=S.logAll?log:log.slice(0,10);
+  return `<section class="sheet" id="gamelog">
     <div class="spread"><h2>Game log</h2>
       <select id="logYear" aria-label="Season">${p.years.map(s=>`<option value="${s.year}" ${s.year===S.profileYear?'selected':''}>${s.year}</option>`).join('')}</select></div>
-    <ol class="list" style="margin-top:8px">${log.map(g=>`<li class="li">${chip(g.place)}<div class="grow"><b>${dLong(g.date).replace(/, \d{4}$/,'')}</b><div class="sub num">${ord(g.place)} of ${g.field}, ${g.pts} pts</div></div>${g.win?`<div class="val won num">${money(g.win)}</div>`:''}</li>`).join('')}</ol>
+    <div class="cols" aria-hidden="true"><span>Game</span><span class="c">Points</span><span class="c w">Winnings</span></div>
+    <ol class="list">${shown.map(g=>`<li class="li">${chip(g.place)}<div class="grow"><b>${DAYS[pd(g.date).getDay()].slice(0,3)}, ${dShort(g.date)}</b><div class="sub num">${ord(g.place)} of ${g.field}</div></div><div class="c num">${g.pts}</div>${wonCell(g.win)}</li>`).join('')}</ol>
+    ${log.length>10?`<button class="btn line wide" data-act="logtoggle">${S.logAll?'Show the latest 10':'Show all '+log.length+' games'}</button>`:''}
   </section>`;
 }
 
@@ -980,13 +1048,15 @@ document.addEventListener('click',async e=>{
   if(d.act==='signout') return signOut();
   if(d.act==='mystats'){ $('#dialogRoot').innerHTML=''; S.histQuery=S.me.id; return go('history'); }
   if(d.act==='newplayer') return playerDialog(null);
+  if(d.act==='logtoggle'){ const wasAll=S.logAll; S.logAll=!S.logAll; await render(); if(wasAll){ const el=document.getElementById('gamelog'); if(el) el.scrollIntoView({block:'start'}); } return; }
   if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,paid:true,note:''}); E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
+  if(d.goto==='pot'){ go('payouts'); setTimeout(()=>{ const el=document.getElementById('toc-pot'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); return; }
   if(d.goto==='season'){ S.standMode='season'; S.year=S.snap.currentYear; return go('standings'); }
   if(d.goto==='week'){ S.standMode='week'; S.year=S.snap.currentYear; S.weekIdx=0; return go('standings'); }
   if(d.mode){ S.standMode=d.mode; return render(); }
   if(d.nav) return stepPeriod(Number(d.nav));
   if(d.step){ S.players=Math.max(2,Math.min(50,S.players+Number(d.step))); return render(); }
-  if(d.pid){ S.histQuery=d.pid; S.profileYear=null; return go('history'); }
+  if(d.pid){ S.histQuery=d.pid; S.profileYear=null; S.logAll=false; return go('history'); }
   if(d.mgr){ S.mgrTab=d.mgr; return render(); }
   const E=S.entry;
   if(d.up!=null){ const i=+d.up; [E.rows[i-1],E.rows[i]]=[E.rows[i],E.rows[i-1]]; return render(); }
@@ -1028,6 +1098,8 @@ function storeSnap(s){ const c=Object.assign({},s); delete c.me; store.set(SNAP_
     if(!cached) $('#view').innerHTML=`<div class="sheet" style="margin-top:20px">${errBox(e)}<p class="hint">Reload the page to try again.</p></div>`;
   }
   $('#refresh').classList.add('hide');
+  const idle=window.requestIdleCallback||(f=>setTimeout(f,1500));
+  if(!noMotion()) idle(()=>getLottie().catch(()=>{}));
 })();
 </script>
 </body>
