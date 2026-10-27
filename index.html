@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>YeahBuddy Poker</title>
 <meta name="description" content="Standings, results and history for the YeahBuddy Poker Thursday night league.">
-<meta name="theme-color" content="#0A3F2F">
+<link rel="preload" as="image" href="logo.webp">
+<meta name="theme-color" content="#5B8FC7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="YeahBuddy">
@@ -24,17 +25,19 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbxXR-kItwWVRX9VWK9KpzJ0
 </script>
 <style>
 :root{
-  --felt:#0F5A43; --felt-deep:#0A3F2F; --felt-line:#1C6E55; --felt-text:#BFD6CB;
-  --ivory:#FFF9EC; --paper:#FFFDF7; --ink:#14201B; --mute:#5D6A63; --rule:#E7DFCB; --sand:#F6F0E1;
-  --chip:#C8312B; --chip-deep:#9E2420; --brass:#D9A441; --brass-deep:#9A6F17;
-  --good:#1F7A4D; --bad:#B42A24;
+  /* Colors from the YeahBuddy Poker logo: medium blue table, navy chip, gold, crimson, orange */
+  --felt:#24497A; --felt-deep:#1E3F66; --felt-line:#6E9BCB; --felt-text:#E3ECF7;
+  --navy:#14223A; --navy-2:#1B2B47; --orange:#E8893A;
+  --ivory:#FBF6EA; --paper:#FFFCF5; --ink:#14223A; --mute:#5E6678; --rule:#E8DFCB; --sand:#F4ECDA;
+  --chip:#A3282B; --chip-deep:#7A1C20; --brass:#C9A45C; --brass-deep:#8F6A2E;
+  --good:#2C7A4B; --bad:#B42A24;
   --display:"Bricolage Grotesque","Arial Narrow",sans-serif;
   --body:"Atkinson Hyperlegible",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;color:var(--ink);font:16px/1.45 var(--body);-webkit-text-size-adjust:100%}
-html{background:var(--felt-deep)}
-body{min-height:100vh;background:radial-gradient(120% 50% at 50% 0%, var(--felt) 0%, var(--felt-deep) 100%) fixed var(--felt-deep)}
+html{background:#2C5682}
+body{min-height:100vh;background:linear-gradient(180deg,#5B8FC7 0%,#3F73AD 45%,#2C5682 100%) fixed #3F73AD}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--brass);outline-offset:2px}
@@ -55,29 +58,30 @@ main{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top))
 .page-head h1{color:var(--ivory)}
 
 /* account button */
-.acct{flex:none;border:1.5px solid #6FA58E;background:transparent;color:var(--ivory);border-radius:999px;padding:6px 13px;font-weight:700;font-size:14px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.acct.in{background:var(--ivory);color:var(--ink);border-color:var(--ivory)}
+.acct{flex:none;border:1.5px solid #E3ECF7;background:transparent;color:var(--ivory);border-radius:999px;padding:6px 13px;font-weight:700;font-size:14px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct.in{background:var(--navy);color:var(--ivory);border-color:var(--navy)}
 
 /* ---------- home hero ---------- */
-.hero{position:relative;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin:34px 0 18px}
-.hero svg{width:84px;height:84px}
+.hero{position:relative;display:grid;justify-items:center;margin:34px 0 14px}
+.hero .logo{width:min(260px,66vw);height:auto;display:block;filter:drop-shadow(0 10px 18px rgba(14,26,46,.35))}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .brand{font:800 clamp(36px,10.5vw,58px)/.9 var(--display);color:var(--ivory);letter-spacing:-.03em}
 .brand span{display:block;color:var(--brass)}
 .tagline{color:var(--felt-text);font-size:14px;margin-top:6px}
 .hero .acct{position:absolute;top:-30px;right:0}
 
 .potline{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;width:100%;text-align:left;border-radius:16px;padding:12px 16px;margin-bottom:16px;
-  background:linear-gradient(135deg,#123F31 0%,#0B3428 100%);border:1.5px solid var(--brass);color:var(--ivory)}
+  background:linear-gradient(135deg,var(--navy-2) 0%,var(--navy) 100%);border:1.5px solid var(--brass);color:var(--ivory)}
 .potline .lbl{flex-basis:100%;color:var(--brass);font-weight:700;font-size:14px}
 .potline .amt{font:800 40px/1 var(--display);letter-spacing:-.02em}
-.potline .grow{font:600 20px/1 var(--display);color:var(--felt-text)}
+.potline .grow{font:600 20px/1 var(--display);color:var(--orange)}
 .pot{border-radius:18px;padding:16px;margin-bottom:16px;color:var(--ivory);
-  background:linear-gradient(135deg,#123F31 0%,#0B3428 100%);border:1.5px solid var(--brass);position:relative;overflow:hidden}
+  background:linear-gradient(135deg,var(--navy-2) 0%,var(--navy) 100%);border:1.5px solid var(--brass);position:relative;overflow:hidden}
 .pot .lbl{color:var(--brass);font-weight:700;font-size:15px}
 .pot .amt{font:800 56px/1 var(--display);letter-spacing:-.02em;margin:4px 0 6px}
-.pot p{color:var(--felt-text);font-size:14px;max-width:44ch}
+.pot p{color:#C9D3E4;font-size:14px;max-width:44ch}
 .pot .splits{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.pot .splits div{background:rgba(255,249,236,.08);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--felt-text)}
+.pot .splits div{background:rgba(255,249,236,.08);border-radius:10px;padding:6px 10px;font-size:13px;color:#C9D3E4}
 .pot .splits b{display:block;color:var(--ivory);font:800 18px/1.1 var(--display)}
 
 .podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:8px;align-items:end;margin:14px 0 6px}
@@ -100,12 +104,12 @@ label.f{display:block;font-weight:700;font-size:14px;margin-bottom:4px}
 .btn.small{min-height:34px;padding:6px 11px;font-size:14px}
 .btn.wide{width:100%;margin-top:12px}
 .btn:disabled{opacity:.45;cursor:default}
-.linkish{background:none;border:0;padding:0;color:var(--chip-deep);text-decoration:underline;font-weight:700}
+.linkish{background:none;border:0;padding:0;color:#2F5B82;text-decoration:underline;font-weight:700}
 .pid{background:none;border:0;padding:0;font-weight:700;color:inherit;text-align:left;text-decoration:underline;text-decoration-color:#CFC5AE;text-underline-offset:3px;overflow-wrap:anywhere}
 .pid:hover{text-decoration-color:var(--chip)}
-.seg{display:inline-flex;background:var(--felt);border-radius:999px;padding:3px;border:1px solid var(--felt-line)}
-.seg button{border:0;background:transparent;color:#CFE3D9;padding:8px 16px;border-radius:999px;font-weight:700;font-size:15px}
-.seg button[aria-pressed=true]{background:var(--ivory);color:var(--ink)}
+.seg{display:inline-flex;background:var(--felt);border-radius:999px;padding:3px;border:1px solid #8CB0D8}
+.seg button{border:0;background:transparent;color:#DCE7F5;padding:8px 16px;border-radius:999px;font-weight:700;font-size:15px}
+.seg button[aria-pressed=true]{background:var(--brass);color:var(--navy)}
 .seg.full{display:flex;width:100%}
 .seg.full button{flex:1}
 .seg.light{background:#EFE7D3;border-color:#E2D8BF}
@@ -113,11 +117,14 @@ label.f{display:block;font-weight:700;font-size:14px;margin-bottom:4px}
 .seg.light button[aria-pressed=true]{background:var(--ink);color:var(--ivory)}
 .seg.grid2{display:grid;grid-template-columns:1fr 1fr;border-radius:16px;width:100%;max-width:420px}
 .seg.grid2 button{border-radius:12px}
+.seg.grid2 button:last-child:nth-child(odd){grid-column:1/-1}
+textarea{border:1.5px solid #CFC5AE;background:#fff;border-radius:10px;padding:9px 11px;width:100%;font:inherit;resize:vertical}
+.preview{width:100%;border:1.5px solid var(--rule);border-radius:10px;background:#fff;height:420px;margin-top:10px}
 
 /* period navigator */
 .nav{display:flex;align-items:center;gap:8px;margin:12px 0 14px}
-.nav select{flex:1;min-width:0;background:var(--felt);color:var(--ivory);border-color:#5E9B83;font-weight:700;text-align:center;text-align-last:center}
-.arrow{flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid #5E9B83;background:transparent;color:var(--ivory);display:grid;place-items:center}
+.nav select{flex:1;min-width:0;background:var(--felt);color:var(--ivory);border-color:#8CB0D8;font-weight:700;text-align:center;text-align-last:center}
+.arrow{flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid #E3ECF7;background:transparent;color:var(--ivory);display:grid;place-items:center}
 .arrow svg{width:22px;height:22px}
 .arrow:disabled{opacity:.3;cursor:default}
 
@@ -127,7 +134,7 @@ label.f{display:block;font-weight:700;font-size:14px;margin-bottom:4px}
   border:2px solid var(--e);font:800 15px/1 var(--display);color:var(--t)}
 .chip.p1,.chip.p2,.chip.p3{--c:var(--chip);--e:var(--chip-deep);--t:#fff;
   background:radial-gradient(circle,var(--chip) 0 56%,transparent 57%),repeating-conic-gradient(#fff 0 22.5deg,var(--chip) 22.5deg 45deg)}
-.chip.toc{--c:#FBEFD3;--e:var(--brass)}
+.chip.toc{--c:#F6E9C8;--e:var(--brass)}
 .chip.big{width:52px;height:52px;font-size:20px}
 
 /* ---------- lists ---------- */
@@ -146,6 +153,7 @@ label.f{display:block;font-weight:700;font-size:14px;margin-bottom:4px}
 .li .c.w,.cols .c.w{width:70px}
 .li .c.w{color:var(--good)}
 .li .c.zero{color:#B9B09A;font-weight:400}
+.li .tb{display:block;color:var(--brass-deep);font-size:12px;line-height:1.3;margin-top:1px}
 .cut{display:flex;align-items:center;gap:10px;margin:6px 0;color:var(--brass-deep);font-weight:700;font-size:13px;text-align:center}
 .cut::before,.cut::after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--brass) 0 8px,transparent 8px 13px)}
 table.t{width:100%;border-collapse:collapse;font-size:15px}
@@ -168,10 +176,10 @@ table.t th.hl{color:var(--ink)}
 .lock{background:var(--sand);border-radius:12px;padding:12px 14px;margin-top:14px;font-size:15px}
 
 /* ---------- history ---------- */
-.find{display:flex;align-items:center;gap:6px;background:var(--felt);border:1.5px solid #5E9B83;border-radius:999px;padding:2px 4px 2px 12px;width:min(210px,52vw)}
+.find{display:flex;align-items:center;gap:6px;background:var(--felt);border:1.5px solid #8CB0D8;border-radius:999px;padding:2px 4px 2px 12px;width:min(210px,52vw)}
 .find svg{width:18px;height:18px;flex:none;color:var(--felt-text)}
 .find input{border:0;background:transparent;color:var(--ivory);min-height:36px;padding:4px;width:100%;outline:none}
-.find input::placeholder{color:#9DC1B1}
+.find input::placeholder{color:#B9CDE6}
 .find:focus-within{border-color:var(--brass)}
 .prof-head{display:flex;align-items:center;gap:14px}
 .prof-head h2{font-size:28px;overflow-wrap:anywhere}
@@ -189,8 +197,8 @@ table.t th.hl{color:var(--ink)}
 .badge.gold{background:#FBEFD3;border-color:var(--brass)}
 .badge.gold .med{--m:var(--brass);--r:#FFF6DD;color:var(--ink)}
 .badge.red .med{--m:var(--chip);--r:#fff}
-.badge.ivory .med{--m:var(--ink);--r:var(--ivory)}
-.badge.felt .med{--m:var(--felt);--r:#CFE3D9}
+.badge.ivory .med{--m:var(--navy);--r:var(--ivory)}
+.badge.felt .med{--m:#2F5B82;--r:#DCE7F5}
 
 /* ---------- payouts ---------- */
 .calc{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
@@ -208,12 +216,12 @@ table.t th.hl{color:var(--ink)}
 .mono{font-family:var(--display);font-weight:800;letter-spacing:.02em}
 
 /* ---------- bottom nav ---------- */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--ivory);border-top:1px solid var(--rule);
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--navy);border-top:1px solid #2A3D5E;
   display:flex;justify-content:center;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
 nav.tabs .in{display:flex;width:100%;max-width:600px}
-nav.tabs button{flex:1;min-width:0;border:0;background:transparent;padding:6px 1px;color:var(--mute);font-size:11.5px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px}
+nav.tabs button{flex:1;min-width:0;border:0;background:transparent;padding:6px 1px;color:#9AA8C2;font-size:11.5px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px}
 nav.tabs svg{width:24px;height:24px}
-nav.tabs button[aria-current=page]{color:var(--chip-deep);background:#F6EBD3}
+nav.tabs button[aria-current=page]{color:var(--brass);background:var(--navy-2)}
 
 /* ---------- manager ---------- */
 .entry .li{gap:8px;flex-wrap:wrap}
@@ -232,7 +240,7 @@ nav.tabs button[aria-current=page]{color:var(--chip-deep);background:#F6EBD3}
 .tag.on{background:#DFF2E7;color:var(--good)}
 
 /* ---------- dialog ---------- */
-.scrim{position:fixed;inset:0;background:rgba(5,25,18,.6);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.scrim{position:fixed;inset:0;background:rgba(10,20,40,.6);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .dialog{background:var(--paper);width:100%;max-width:460px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));animation:rise .22s ease-out}
 @media (min-width:600px){.scrim{align-items:center}.dialog{border-radius:20px}}
 @keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
@@ -267,35 +275,7 @@ nav.tabs button[aria-current=page]{color:var(--chip-deep);background:#F6EBD3}
 <div id="dialogRoot"></div>
 <div id="refresh" class="refreshing hide" role="status"><i></i>Updating</div>
 
-<!-- logo mark -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <g id="ybcard"><rect x="-82" y="-118" width="164" height="236" rx="16" fill="#FFF9EC" stroke="#14201B" stroke-width="7"/></g>
-    <g id="mark">
-      <g transform="translate(178 214) rotate(-15)"><use href="#ybcard"/>
-        <text x="-62" y="-70" font-family="Georgia,serif" font-weight="700" font-size="46" fill="#14201B">A</text>
-        <path d="M-48 -52 c-14 12 -22 18 -22 28 c0 9 9 14 17 9 c-2 6 -5 10 -9 12 h28 c-4 -2 -7 -6 -9 -12 c8 5 17 0 17 -9 c0 -10 -8 -16 -22 -28z" fill="#14201B"/></g>
-      <g transform="translate(334 214) rotate(13)"><use href="#ybcard"/>
-        <text x="22" y="-70" font-family="Georgia,serif" font-weight="700" font-size="46" fill="#C8312B">A</text>
-        <path d="M48 -16 c-16 -12 -26 -20 -26 -31 c0 -9 7 -14 14 -14 c5 0 9 3 12 7 c3 -4 7 -7 12 -7 c7 0 14 5 14 14 c0 11 -10 19 -26 31z" fill="#C8312B"/></g>
-      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <g stroke="#FFF9EC" stroke-width="30"><path d="M256 226 V352"/><path d="M256 352 L214 446 M256 352 L298 446"/><path d="M256 262 L320 302 L272 340"/><path d="M256 262 L194 326 L236 318"/></g>
-        <g stroke="#14201B" stroke-width="15"><path d="M256 226 V352"/><path d="M256 352 L214 446 M256 352 L298 446"/><path d="M256 262 L320 302 L272 340"/><path d="M256 262 L194 326 L236 318"/></g>
-      </g>
-      <rect x="226" y="294" width="50" height="44" rx="13" fill="#FFF9EC" stroke="#FFF9EC" stroke-width="16"/>
-      <rect x="248" y="256" width="20" height="52" rx="10" fill="#FFF9EC" stroke="#FFF9EC" stroke-width="16"/>
-      <rect x="226" y="294" width="50" height="44" rx="13" fill="#FFF9EC" stroke="#14201B" stroke-width="8"/>
-      <rect x="248" y="256" width="20" height="52" rx="10" fill="#FFF9EC" stroke="#14201B" stroke-width="8"/>
-      <path d="M232 310 H262 M232 323 H262" stroke="#14201B" stroke-width="5" stroke-linecap="round"/>
-      <circle cx="256" cy="168" r="66" fill="#FFF9EC"/>
-      <circle cx="256" cy="168" r="56" fill="#C8312B" stroke="#14201B" stroke-width="8"/>
-      <circle cx="256" cy="168" r="44" fill="none" stroke="#FFF9EC" stroke-width="10" stroke-dasharray="17.3 17.3"/>
-      <circle cx="256" cy="168" r="31" fill="#FFF9EC" stroke="#14201B" stroke-width="4"/>
-      <circle cx="245" cy="162" r="4.5" fill="#14201B"/><circle cx="267" cy="162" r="4.5" fill="#14201B"/>
-      <path d="M241 174 Q256 188 271 174" fill="none" stroke="#14201B" stroke-width="4.5" stroke-linecap="round"/>
-    </g>
-  </defs>
-</svg>
+
 
 <script>
 /* ===================== state ===================== */
@@ -494,8 +474,8 @@ VIEWS.home=function(){
   }
   return `
   <header class="hero">
-    <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#mark"/></svg>
-    <div><h1 class="brand">YeahBuddy<span>Poker</span></h1><p class="tagline">Thursday night league on PokerStars</p></div>
+    <img class="logo" src="logo.webp" width="520" height="483" alt="">
+    <h1 class="sr-only">YeahBuddy Poker</h1>
     ${acctBtn()}
   </header>
   <button class="potline" data-goto="pot" aria-label="${pot.year} Tournament of Champions pot ${money(pot.collected)} and growing. See details on the Payouts page.">
@@ -769,7 +749,14 @@ VIEWS.rules=function(){
   <section class="sheet">
     <h2>Tournament of Champions</h2>
     <ul>
-      <li>The top <b>${spots}</b> players in the season standings are invited.</li>
+      <li>The top <b>${spots}</b> players in the season standings are invited. Only ${spots} can play, so if players are tied on points, the one who did better qualifies, checked in this order:
+        <ol style="margin:6px 0 0;padding-left:20px">
+          <li>Most games played this season</li>
+          <li>Most winnings this season</li>
+          <li>Best average finish this season (the average closest to 1st place)</li>
+          <li>Most games played across all seasons</li>
+          <li>Longest in the league (earliest first game)</li>
+        </ol></li>
       <li>The pot is ${money(c.tocFee)} from every buy-in during the season, plus a ${money(c.tocFinalistBuyIn)} buy-in from each finalist.</li>
       <li>${tp?`The pot has been paid out ${tp}.`:'The top places are paid from the pot.'}</li>
       <li>The date is set at the end of the season around the finalists' schedules.</li>
@@ -780,7 +767,7 @@ VIEWS.rules=function(){
     <ol style="padding-left:20px;margin:8px 0 0">
       <li>Get PokerStars free: pokerstars.net on a computer, or the PokerStars app on your phone.</li>
       <li>Open <b>Home Games</b>, then <b>Join a Poker Club</b>.</li>
-      <li>Enter Club ID <span class="mono">${esc(c.clubId)}</span> and invitation code <span class="mono">${esc(c.clubCode)}</span>.</li>
+      <li>Enter Club ID <span class="mono">${esc(c.clubId)}</span> and Invitation Code: <span class="mono">"${esc(c.clubCode)}"</span>, typed exactly as shown, including the capitals and the exclamation point.</li>
       <li>Wait for the club owner to approve you, then register for the tournament under <b>My Scheduled Tournaments</b>.</li>
     </ol>
     <div class="callout">The tournament uses free PokerStars play chips. The Get Free Chips button tops you up every 4 hours. You never have to buy chips, and the real ${money(c.buyIn)} is paid on Venmo.</div>
@@ -792,11 +779,15 @@ VIEWS.rules=function(){
 VIEWS.manager=async function(v,seq){
   const head=`<div class="page-head"><h1>Manager</h1>${acctBtn()}</div>`;
   if(!S.mgr){ slow(v,seq,'Opening the books…',head); S.mgr=await call('mgr_overview'); }
-  const tabs={entry:'Enter results',payments:'Payments',players:'Players',money:'Money'};
+  const tabs={entry:'Enter results',payments:'Payments',players:'Players',money:'Money',reminder:'Reminder email'};
   let body='';
   if(S.mgrTab==='entry') body=entryHtml();
   if(S.mgrTab==='payments') body=paymentsHtml();
   if(S.mgrTab==='players') body=playersHtml();
+  if(S.mgrTab==='reminder'){
+    if(!S.rem){ slow(v,seq,'Building the email…',head); S.rem=await call('mgr_reminderPreview'); S.remSubject=S.rem.subject; S.remMessage=S.rem.message; S.remHtml=S.rem.html; }
+    body=reminderViewHtml();
+  }
   if(S.mgrTab==='money'){
     if(!S.money[S.moneyYear]){ slow(v,seq,'Counting money…',head); S.money[S.moneyYear]=await call('mgr_money',{year:S.moneyYear}); }
     body=moneyHtml();
@@ -805,7 +796,7 @@ VIEWS.manager=async function(v,seq){
       ${Object.keys(tabs).map(k=>`<button data-mgr="${k}" aria-pressed="${S.mgrTab===k}">${tabs[k]}${k==='payments'&&S.mgr.owed.length?` (${S.mgr.owed.length})`:''}</button>`).join('')}
     </div>`+body;
 };
-AFTER.manager=()=>bindManager();
+AFTER.manager=()=>{ bindManager(); bindReminder(); };
 const nameOf=id=>{ const p=S.mgr.players.find(x=>x.id.toLowerCase()===String(id).toLowerCase()); return p?[p.first,p.last].filter(Boolean).join(' '):''; };
 
 function entryHtml(){
@@ -872,6 +863,7 @@ function playersHtml(){
       </div>
       <div class="row" style="gap:6px">
         <span class="tag ${p.hasPin?'on':''}">${p.hasPin?'Has PIN':'No PIN'}</span>
+        <button class="btn small line" data-welcome="${esc(p.id)}">Welcome text</button>
         <button class="btn small line" data-edit="${esc(p.id)}">Edit</button>
         <button class="btn small line" data-pin="${esc(p.id)}">${p.hasPin?'New PIN':'Set PIN'}</button>
       </div>
@@ -879,6 +871,56 @@ function playersHtml(){
     <p class="hint">A PIN lets a player sign in and see their own winnings and losses. Making a new PIN signs them out everywhere.</p>
   </section>`;
 }
+function reminderViewHtml(){
+  const r=S.rem;
+  return `<section class="sheet">
+    <h2>Weekly reminder email</h2>
+    ${r.recError?`<div style="margin-top:10px">${errBox(r.recError)}</div>`
+      :`<p class="meta" style="margin-top:6px">Goes to the ${r.count} people in your "${esc(r.group)}" contact group${r.bcc?', as Bcc so their addresses stay private':''}. Sent from ${esc(r.from)}.</p>`}
+    ${r.lastSent?`<p class="meta" style="margin-top:4px">Last sent ${esc(r.lastSent)}.</p>`:''}
+    <div class="field" style="margin-top:14px"><label class="f" for="remSubj">Subject</label><input id="remSubj" type="text" value="${esc(S.remSubject)}" style="width:100%"></div>
+    <div class="field"><label class="f" for="remMsg">Message</label><textarea id="remMsg" rows="5">${esc(S.remMessage)}</textarea>
+      <p class="hint" style="margin-top:4px">The year-to-date and monthly standings tables are added below your message, using the latest results.</p></div>
+    <div id="remStatus">${S.remStatus||''}</div>
+    <div class="row" style="margin-top:6px">
+      <button class="btn red" id="remSend" ${r.recError?'disabled':''}>Send to ${esc(r.group)}</button>
+      <button class="btn line" id="remTest">Send me a test</button>
+    </div>
+  </section>
+  <section class="sheet">
+    <h2>Preview</h2>
+    <iframe class="preview" id="remPrev" title="Email preview" sandbox="allow-same-origin"></iframe>
+  </section>`;
+}
+function showPreview(){
+  const f=$('#remPrev'); if(!f) return;
+  f.onload=()=>{ try{
+    const d=f.contentDocument, w=d.documentElement.scrollWidth, avail=f.clientWidth-4;
+    if(w>avail) d.body.style.zoom=(avail/w).toFixed(3);
+    f.style.height=Math.min(900,d.documentElement.scrollHeight+20)+'px';
+  }catch(e){} };
+  f.srcdoc='<!doctype html><html><body style="margin:12px;background:#fff">'+S.remHtml+'</body></html>';
+}
+let remTimer=null;
+function bindReminder(){
+  const subj=$('#remSubj'), msg=$('#remMsg'); if(!subj) return;
+  showPreview();
+  subj.oninput=()=>{ S.remSubject=subj.value; };
+  msg.oninput=()=>{ S.remMessage=msg.value; clearTimeout(remTimer); remTimer=setTimeout(async()=>{
+    try{ const r=await call('mgr_sendReminder',{preview:true,message:S.remMessage}); S.remHtml=r.html; showPreview(); }catch(e){} },700); };
+  const send=async(test)=>{
+    const btn=test?$('#remTest'):$('#remSend'); btn.disabled=true; const label=btn.textContent; btn.textContent='Sending…';
+    try{
+      const r=await call('mgr_sendReminder',{subject:S.remSubject,message:S.remMessage,test});
+      S.remStatus=test?`<div class="ok">Test sent to ${esc(r.to)}.</div>`:`<div class="ok">Sent to ${r.sent} people.</div>`;
+      if(!test) S.rem.lastSent=r.lastSent;
+    }catch(e){ S.remStatus=errBox(e); }
+    btn.disabled=false; btn.textContent=label; render();
+  };
+  $('#remTest').onclick=()=>send(true);
+  $('#remSend').onclick=()=>confirmDialog(`Send the reminder to ${S.rem.count} people?`,`Subject: ${S.remSubject}`,'Send email',()=>send(false));
+}
+
 function moneyHtml(){
   const rows=S.money[S.moneyYear]||[];
   const tot=rows.reduce((a,r)=>({paid:a.paid+r.paid,won:a.won+r.won}),{paid:0,won:0});
@@ -955,7 +997,7 @@ function playerDialog(existing, onDone){
         e.preventDefault();
         const btn=root.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='Saving…';
         const a={id:root.querySelector('#pf_id').value.trim(),first:root.querySelector('#pf_first').value,last:root.querySelector('#pf_last').value,email:root.querySelector('#pf_email').value,venmo:root.querySelector('#pf_venmo').value,isNew:!existing};
-        try{ await call('mgr_savePlayer',a); S.mgr=await call('mgr_overview'); close(); if(onDone) onDone(a.id); render(); }
+        try{ await call('mgr_savePlayer',a); S.mgr=await call('mgr_overview'); close(); if(onDone) onDone(a.id); await render(); if(!existing) welcomeDialog({id:a.id,first:a.first.trim()},true); }
         catch(err){ root.querySelector('#pf_err').innerHTML=errBox(err); btn.disabled=false; btn.textContent=existing?'Save changes':'Add player'; }
       };
     });
@@ -995,7 +1037,7 @@ function signInDialog(){
           <div class="field"><label class="f" for="si_id">Player ID</label><input id="si_id" type="text" list="pids2" autocapitalize="off" autocorrect="off" autocomplete="username" required>
           <datalist id="pids2">${S.snap.playerIds.map(i=>`<option value="${esc(i)}">`).join('')}</datalist></div>
           <div class="field"><label class="f" for="si_pin">PIN</label><input id="si_pin" type="password" inputmode="numeric" autocomplete="current-password" required></div>
-          <p class="hint" style="margin-top:-4px">Your PIN comes from the league manager. Signing in lets you see your own winnings and losses.</p>`
+          <p class="hint" style="margin-top:-4px">Your PIN comes from the league manager. Signing in lets you see your own profit after buy-ins.</p>`
         :`<div class="field"><label class="f" for="si_pw">Manager password</label><input id="si_pw" type="password" autocomplete="current-password" required></div>`}
         <div id="si_err"></div>
         <div class="row" style="margin-top:10px"><button class="btn red" type="submit">Sign in</button><button class="btn line" type="button" id="si_cancel">Cancel</button></div>
@@ -1015,6 +1057,47 @@ function signInDialog(){
     };
   };
   openDialog('',draw);
+}
+function welcomeText(p,pin){
+  const c=cfg(), app=c.appUrl||location.href.split('#')[0];
+  return `Hi ${p.first||'there'}! Thanks for joining ${c.clubName}. Here's how to get in the game:
+
+1. Get PokerStars free: pokerstars.net on a computer, or the PokerStars app on your phone.
+2. Open Home Games and choose Join a Poker Club.
+3. Enter Club ID: ${c.clubId}
+   Invitation Code: "${c.clubCode}"
+   (type it exactly as shown, including the capitals and the exclamation point)
+4. Once you're approved for the ${c.clubName} club, register for the tournament under My Scheduled Tournaments.
+
+Games are ${c.gameDay}s at ${c.gameTime}. The buy-in is ${money(c.buyIn)}, paid on Venmo to ${c.venmo} before the game starts.
+
+Get the league app for standings and results: ${app}
+On iPhone, open it in Safari and tap Share, then Add to Home Screen. On Android, open it in Chrome and tap the ⋮ menu, then Add to Home screen.`+(pin?`
+
+Your app sign-in: Player ID ${p.id}, PIN ${pin}`:'');
+}
+function welcomeDialog(p,justAdded){
+  let pin=null;
+  openDialog(`<h2>${justAdded?esc(p.id)+' is added':'Welcome text for '+esc(p.id)}</h2>
+    <p class="meta" style="margin:6px 0 10px">Copy this and send it to them. You can edit it first.</p>
+    <textarea id="wText" rows="12"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="wCopy">Copy text</button>
+      <a class="btn line" id="wSms" style="text-decoration:none;display:inline-flex;align-items:center" href="#">Open in Messages</a>
+      <button class="linkish" id="wPin">Add an app PIN</button>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn line" data-dismiss>Done</button></div>`,
+  root=>{
+    const ta=root.querySelector('#wText'), sms=root.querySelector('#wSms');
+    const sync=()=>{ sms.href='sms:?&body='+encodeURIComponent(ta.value); };
+    ta.value=welcomeText(p); sync(); ta.oninput=sync;
+    root.querySelector('#wCopy').onclick=async e=>{ try{ await navigator.clipboard.writeText(ta.value); e.target.textContent='Copied'; }catch(_){ ta.select(); e.target.textContent='Press and hold to copy'; } };
+    root.querySelector('#wPin').onclick=async e=>{
+      e.target.disabled=true; e.target.textContent='Making a PIN…';
+      try{ const r=await call('mgr_setPin',{id:p.id}); pin=r.pin; ta.value=welcomeText(p,pin); sync(); e.target.textContent='PIN '+pin+' added'; S.mgr=await call('mgr_overview'); if(S.tab==='manager') render(); }
+      catch(err){ e.target.disabled=false; e.target.textContent='Add an app PIN'; }
+    };
+  });
 }
 function accountDialog(){
   openDialog(`<h2>${isMgr()?'Signed in as manager':'Signed in as '+esc(S.me.id)}</h2>
@@ -1057,13 +1140,14 @@ document.addEventListener('click',async e=>{
   if(d.nav) return stepPeriod(Number(d.nav));
   if(d.step){ S.players=Math.max(2,Math.min(50,S.players+Number(d.step))); return render(); }
   if(d.pid){ S.histQuery=d.pid; S.profileYear=null; S.logAll=false; return go('history'); }
-  if(d.mgr){ S.mgrTab=d.mgr; return render(); }
+  if(d.mgr){ S.mgrTab=d.mgr; S.remStatus=''; if(d.mgr==='reminder') S.rem=null; return render(); }
   const E=S.entry;
   if(d.up!=null){ const i=+d.up; [E.rows[i-1],E.rows[i]]=[E.rows[i],E.rows[i-1]]; return render(); }
   if(d.down!=null){ const i=+d.down; [E.rows[i+1],E.rows[i]]=[E.rows[i],E.rows[i+1]]; return render(); }
   if(d.del!=null){ E.rows.splice(+d.del,1); return render(); }
   if(d.noteadd!=null){ E.rows[+d.noteadd].showNote=true; await render(); const n=document.querySelector(`[data-note="${d.noteadd}"]`); if(n) n.focus(); return; }
   if(d.pin) return pinDialog(d.pin);
+  if(d.welcome){ const p=S.mgr.players.find(x=>x.id===d.welcome); return welcomeDialog({id:p.id,first:p.first}); }
   if(d.edit){ const p=S.mgr.players.find(x=>x.id===d.edit); return playerDialog(p); }
   if(d.markpaid){
     const [id,date]=d.markpaid.split('|'); t.disabled=true; t.textContent='Saving…';

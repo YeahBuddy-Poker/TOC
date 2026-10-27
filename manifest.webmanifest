@@ -3,10 +3,18 @@
   "short_name": "YeahBuddy",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0A3F2F",
-  "theme_color": "#0A3F2F",
+  "background_color": "#3F73AD",
+  "theme_color": "#5B8FC7",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
