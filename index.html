@@ -862,7 +862,21 @@ VIEWS.manager=async function(v,seq){
 AFTER.manager=()=>{ bindManager(); bindReminder(); };
 const nameOf=id=>{ const p=S.mgr.players.find(x=>x.id.toLowerCase()===String(id).toLowerCase()); return p?[p.first,p.last].filter(Boolean).join(' '):''; };
 
+/* After a game is saved, its results stay on screen for an hour, then the screen
+   clears itself for the next game. (The results are already in the sheet.) */
+const CLEAR_AFTER_MS=60*60*1000;
+function clearEntryIfStale(){
+  const E=S.entry;
+  if(E.savedAt&&!E.dirty&&Date.now()-E.savedAt>=CLEAR_AFTER_MS){ // never clears unsaved changes
+    S.entry={date:'',rows:[],editing:false,msg:null,busy:false};
+    return true;
+  }
+  return false;
+}
+setInterval(()=>{ if(clearEntryIfStale()&&S.tab==='manager'&&S.mgrTab==='entry'&&!$('#dialogRoot').innerHTML) render(); },60*1000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&clearEntryIfStale()&&S.tab==='manager'&&S.mgrTab==='entry') render(); });
 function entryHtml(){
+  clearEntryIfStale();
   const E=S.entry; if(!E.date) E.date=S.mgr.today;
   const n=E.rows.length;
   return `<section class="sheet entry">
@@ -890,7 +904,7 @@ function entryHtml(){
     <ol class="list" style="margin-top:6px">
       ${E.rows.map((r,i)=>{ const pl=i+1, pay=payoutFor(n,pl), nm=nameOf(r.id); return `<li class="li">
         <span class="place num">${pl}</span>
-        <div class="grow"><b>${esc(r.id)}</b><div class="sub num">${esc(nm)}${nm?', ':''}${pointsFor(n,pl)} pts${pay?`, wins ${money(pay)}`:''}</div>
+        <div class="grow"><b>${esc(r.id)}</b><div class="sub num">${esc(nm)}${nm?', ':''}${pointsFor(n,pl)} pts${pay?(r.status==='witheld'?`, wins ${money(pay)}, <b class="won">send ${money(pay-cfg().buyIn)}</b> after the ${money(cfg().buyIn)} buy-in`:`, wins ${money(pay)}`):''}</div>
           ${r.showNote||r.note?`<input class="note-in" data-note="${i}" type="text" placeholder="Note" value="${esc(r.note||'')}">`:''}</div>
         <div class="ctrls">
           <select class="paysel st-${r.status}" data-pay="${i}" aria-label="Buy-in for ${esc(r.id)}">${PAY_OPTS.map(([v,t])=>`<option value="${v}" ${r.status===v?'selected':''}>${t}</option>`).join('')}</select>
@@ -1115,7 +1129,7 @@ function addFinisher(id){
   const E=S.entry; if(!id) return;
   if(E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())){ E.msg=errBox(id+' is already on the list.'); return render(); }
   const known=S.mgr.players.some(p=>p.id.toLowerCase()===id.toLowerCase());
-  E.rows.push({id,status:'unpaid',note:''});
+  E.rows.push({id,status:'unpaid',note:''}); E.dirty=true;
   E.msg=known?null:`<div class="banner">${esc(id)} isn't a known Player ID. Check the spelling, or <button class="linkish" data-act="newplayer-entry">add them as a new player</button>.</div>`;
   S.pickAll=false;
   render().then(()=>{ const i=$('#addId'); if(i) i.focus(); });
@@ -1128,7 +1142,7 @@ function resolveId(raw){
   return p?p.id:raw.trim();
 }
 async function loadEntryDate(d){
-  const E=S.entry; E.date=d; E.msg=null; E.rows=[]; E.editing=false;
+  const E=S.entry; E.date=d; E.msg=null; E.rows=[]; E.editing=false; E.savedAt=null; E.dirty=false;
   try{ const g=await call('mgr_getGame',{date:d}); if(g.results.length){ E.rows=g.results.map(rowFromSheet); E.editing=true; } }
   catch(e){ E.msg=errBox(e); }
   render();
@@ -1142,7 +1156,9 @@ function bindManager(){
     try{
       const g=await call('mgr_saveGame',{date:E.date,results:E.rows.map((r,i)=>Object.assign({id:r.id,place:i+1},rowToSheet(r)))});
       E.rows=g.results.map(rowFromSheet); E.editing=true;
-      E.msg=`<div class="ok">Saved ${g.results.length} results for ${dLong(E.date)}. Standings are updated.</div>`;
+      E.savedAt=Date.now(); E.dirty=false;
+      const at=new Date(E.savedAt+CLEAR_AFTER_MS).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+      E.msg=`<div class="ok">Saved ${g.results.length} results for ${dLong(E.date)}. Standings are updated.<br><span style="font-size:14px">This screen clears for the next game at ${at}. <button class="linkish" data-act="newgame">Start a new game now</button></span></div>`;
       refreshAll();
     }catch(e){ E.msg=errBox(e); }
     E.busy=false; render();
@@ -1315,8 +1331,9 @@ document.addEventListener('click',async e=>{
   if(d.act==='signout') return signOut();
   if(d.act==='mystats'){ killDialog(); S.histQuery=S.me.id; return go('history'); }
   if(d.act==='newplayer') return playerDialog(null);
+  if(d.act==='newgame'){ S.entry={date:'',rows:[],editing:false,msg:null,busy:false}; return render(); }
   if(d.act==='logtoggle'){ const wasAll=S.logAll; S.logAll=!S.logAll; await render(); if(wasAll){ const el=document.getElementById('gamelog'); if(el) el.scrollIntoView({block:'start'}); } return; }
-  if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,status:'unpaid',note:''}); E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
+  if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,status:'unpaid',note:''}); E.dirty=true; E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
   if(d.goto==='pot'){ go('payouts'); setTimeout(()=>{ const el=document.getElementById('toc-pot'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); return; }
   if(d.goto==='season'){ S.standMode='season'; S.year=S.snap.currentYear; return go('standings'); }
   if(d.goto==='week'){ S.standMode='week'; S.year=S.snap.currentYear; S.weekIdx=0; return go('standings'); }
@@ -1326,6 +1343,7 @@ document.addEventListener('click',async e=>{
   if(d.pid){ S.histQuery=d.pid; S.profileYear=null; S.logAll=false; return go('history'); }
   if(d.mgr){ S.mgrTab=d.mgr; S.remStatus=''; if(d.mgr==='reminder') S.rem=null; pushNav(); return render(); }
   const E=S.entry;
+  if(d.up!=null||d.down!=null||d.del!=null) E.dirty=true;
   if(d.up!=null){ const i=+d.up; [E.rows[i-1],E.rows[i]]=[E.rows[i],E.rows[i-1]]; return render(); }
   if(d.down!=null){ const i=+d.down; [E.rows[i+1],E.rows[i]]=[E.rows[i],E.rows[i+1]]; return render(); }
   if(d.del!=null){ E.rows.splice(+d.del,1); return render(); }
@@ -1339,8 +1357,8 @@ document.addEventListener('click',async e=>{
     catch(err){ t.disabled=false; t.textContent='Mark paid'; openDialog(`${errBox(err)}<div class="row" style="margin-top:12px"><button class="btn" data-dismiss>OK</button></div>`); }
   }
 });
-document.addEventListener('change',e=>{ const t=e.target; if(t.dataset.pay!=null){ S.entry.rows[+t.dataset.pay].status=t.value; t.className='paysel st-'+t.value; } });
-document.addEventListener('input',e=>{ const t=e.target; if(t.dataset.note!=null) S.entry.rows[+t.dataset.note].note=t.value; });
+document.addEventListener('change',e=>{ const t=e.target; if(t.dataset.pay!=null){ S.entry.rows[+t.dataset.pay].status=t.value; S.entry.dirty=true; t.className='paysel st-'+t.value; render(); } });
+document.addEventListener('input',e=>{ const t=e.target; if(t.dataset.note!=null){ S.entry.rows[+t.dataset.note].note=t.value; S.entry.dirty=true; } });
 document.addEventListener('keydown',e=>{
   if(S.tab!=='standings'||/INPUT|SELECT|TEXTAREA/.test((e.target.tagName||''))||$('#dialogRoot').innerHTML) return;
   if(e.key==='ArrowLeft') stepPeriod(-1); if(e.key==='ArrowRight') stepPeriod(1);
