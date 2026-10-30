@@ -228,6 +228,24 @@ nav.tabs button[aria-current=page]{color:var(--brass);background:var(--navy-2)}
 .entry .place{width:30px;text-align:center;font:800 18px/1 var(--display)}
 .entry .ctrls{display:flex;gap:6px;align-items:center;width:100%;padding-left:42px}
 .entry .ctrls .paidbox{margin-right:auto}
+.combo{position:relative}
+.combo-box{position:relative;display:flex;align-items:center}
+.combo-box input{width:100%;padding-right:46px;position:relative;z-index:1;background:transparent}
+.combo-box .ghost{position:absolute;left:0;top:0;right:46px;bottom:0;padding:9px 11px;border:1.5px solid transparent;white-space:pre;overflow:hidden;
+  color:#9AA3B5;pointer-events:none;font:inherit;line-height:normal;display:flex;align-items:center;background:#fff;border-radius:10px}
+.combo-box .ghost i{font-style:normal;color:transparent}
+.combo-toggle{position:absolute;right:4px;z-index:2;width:38px;height:34px;border:0;border-radius:8px;background:var(--sand);color:var(--ink);display:grid;place-items:center}
+.combo-toggle svg{width:18px;height:18px}
+.picklist{position:absolute;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;background:#fff;border:1.5px solid #CFC5AE;border-radius:12px;
+  box-shadow:0 14px 30px -12px rgba(20,34,58,.45);max-height:320px;overflow:auto;z-index:20}
+.picklist li{display:flex;align-items:baseline;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer}
+.picklist li b{font-weight:700}
+.picklist li span{color:var(--mute);font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picklist li small{color:var(--mute);font-size:12px;white-space:nowrap}
+.picklist li[aria-selected=true]{background:#E4ECF7}
+.picklist li.hd{cursor:default;padding:8px 10px 2px;font-size:12px;font-weight:700;color:var(--mute)}
+.picklist li.more{justify-content:center;color:#2F5B82;font-weight:700;font-size:14px}
+.picklist li.stale b{color:var(--mute)}
 .icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid #CFC5AE;background:#fff;display:grid;place-items:center;font-weight:800;line-height:1}
 .paidbox{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--mute)}
 .paidbox input{width:20px;height:20px;accent-color:var(--good)}
@@ -431,10 +449,50 @@ function acctBtn(){
 }
 function renderTabs(){
   const tabs=['home','standings','payouts','history','rules'].concat(isMgr()?['manager']:[]);
-  if(!tabs.includes(S.tab)) S.tab='home';
+  if(!tabs.includes(S.tab)){ S.tab='home'; pushNav(true); }
   $('#tabs').innerHTML=tabs.map(t=>`<button data-tab="${t}" ${S.tab===t?'aria-current="page"':''}>${ICONS[t]}${TAB_LABEL[t]}</button>`).join('');
 }
-function go(tab){ S.tab=tab; renderTabs(); render(); window.scrollTo(0,0); }
+function go(tab,replace){ S.tab=tab; pushNav(replace); renderTabs(); render(); window.scrollTo(0,0); }
+
+/* Phone back button: every page change is added to the browser history, so Back
+   returns to the previous page (or closes an open pop-up) instead of leaving the app. */
+const navState=()=>({tab:S.tab,mode:S.standMode,q:S.histQuery||'',mgr:S.mgrTab});
+function hashFor(st){
+  if(st.tab==='standings') return '#standings/'+st.mode;
+  if(st.tab==='history') return '#history'+(st.q?'/'+encodeURIComponent(st.q):'');
+  if(st.tab==='manager') return '#manager/'+st.mgr;
+  return '#'+st.tab;
+}
+function parseHash(){
+  const [tab,sub]=decodeURIComponent(location.hash.slice(1)).split(/\/(.*)/s);
+  const st=navState();
+  if(!TAB_LABEL[tab]) return Object.assign(st,{tab:'home'});
+  st.tab=tab;
+  if(tab==='standings'&&['week','month','season'].includes(sub)) st.mode=sub;
+  if(tab==='history') st.q=sub||'';
+  if(tab==='manager'&&sub) st.mgr=sub;
+  return st;
+}
+function pushNav(replace){
+  const st=navState(), cur=history.state&&history.state.nav;
+  S.navCur=st;
+  if(!replace&&cur&&JSON.stringify(cur)===JSON.stringify(st)) return;
+  try{ history[replace?'replaceState':'pushState']({nav:st},'',hashFor(st)); }catch(e){}
+}
+function applyNav(st){
+  S.tab=st.tab; if(st.mode) S.standMode=st.mode;
+  if((st.q||'')!==(S.histQuery||'')){ S.histQuery=st.q||''; S.profileYear=null; S.logAll=false; }
+  if(st.mgr) S.mgrTab=st.mgr;
+  S.navCur=st;
+}
+window.addEventListener('popstate',e=>{
+  const dlg=$('#dialogRoot');
+  if(dlg.innerHTML){ dlg.innerHTML=''; return; }            // Back closes the pop-up, page stays
+  const st=(e.state&&e.state.nav)||parseHash();
+  if(S.navCur&&JSON.stringify(st)===JSON.stringify(S.navCur)){ history.back(); return; } // skip a leftover duplicate
+  applyNav(st);
+  renderTabs(); render(); window.scrollTo(0,0);
+});
 
 let renderSeq=0;
 async function render(){
@@ -658,7 +716,7 @@ VIEWS.history=async function(v,seq){
 };
 AFTER.history=function(){
   const f=$('#lookup'), inp=$('#pidIn');
-  const submit=()=>{ const q=inp.value.trim(); if(!q) return; S.histQuery=q; render(); window.scrollTo(0,0); };
+  const submit=()=>{ const q=inp.value.trim(); if(!q) return; S.histQuery=q; S.profileYear=null; S.logAll=false; pushNav(); render(); window.scrollTo(0,0); };
   f.onsubmit=e=>{ e.preventDefault(); submit(); };
   inp.onchange=()=>{ if(S.snap.playerIds.some(i=>i===inp.value)) submit(); };
   const ys=$('#logYear'); if(ys) ys.onchange=()=>{ S.profileYear=Number(ys.value); S.logAll=false; render(); };
@@ -802,7 +860,6 @@ const nameOf=id=>{ const p=S.mgr.players.find(x=>x.id.toLowerCase()===String(id)
 function entryHtml(){
   const E=S.entry; if(!E.date) E.date=S.mgr.today;
   const n=E.rows.length;
-  const opts=S.mgr.players.map(p=>`<option value="${esc(p.id)}">${esc([p.first,p.last].filter(Boolean).join(' '))}</option>`).join('');
   return `<section class="sheet entry">
     <h2>${E.editing?'Edit a game':'Enter a game'}</h2>
     <div class="row" style="margin-top:12px">
@@ -811,13 +868,20 @@ function entryHtml(){
     </div>
     ${E.editing?'<div class="banner" style="margin-top:12px">This date already has results. Saving replaces them.</div>':''}
     ${E.msg?`<div style="margin-top:12px">${E.msg}</div>`:''}
-    <form id="addForm" class="row" style="margin-top:14px" autocomplete="off">
-      <div style="flex:1;min-width:0"><label class="f" for="addId">Add the next finisher</label>
-      <input id="addId" type="search" list="mgrPids" placeholder="Player ID or name" style="width:100%"></div>
-      <datalist id="mgrPids">${opts}</datalist>
-      <button class="btn" type="submit" style="align-self:flex-end">Add</button>
-    </form>
-    <p class="hint">Add players in finishing order, starting with the winner. Someone new? <button class="linkish" data-act="newplayer-entry">Add a new player</button></p>
+    <div class="row" style="margin-top:14px;align-items:flex-end">
+      <div class="combo" style="flex:1;min-width:0">
+        <label class="f" for="addId">Add the next finisher</label>
+        <div class="combo-box">
+          <div class="ghost" id="addGhost" aria-hidden="true"></div>
+          <input id="addId" type="text" role="combobox" aria-autocomplete="both" aria-expanded="false" aria-controls="pickList"
+            autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Type a Player ID or name">
+          <button type="button" class="combo-toggle" id="pickToggle" aria-label="Show all players" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+        <ul id="pickList" class="picklist hide" role="listbox" aria-label="Players"></ul>
+      </div>
+      <button class="btn" id="addBtn" type="button">Add</button>
+    </div>
+    <p class="hint">Add players in finishing order, starting with the winner. Pick from the list, or type and press Enter. Someone new? <button class="linkish" data-act="newplayer-entry">Add a new player</button></p>
     <ol class="list" style="margin-top:6px">
       ${E.rows.map((r,i)=>{ const pl=i+1, pay=payoutFor(n,pl), nm=nameOf(r.id); return `<li class="li">
         <span class="place num">${pl}</span>
@@ -935,6 +999,99 @@ function moneyHtml(){
     <p class="hint">Paid assumes ${money(cfg().buyIn)} for every game played.</p>
   </section>`;
 }
+/* ---------- player picker: recent players first, type-ahead, dropdown ---------- */
+const ACTIVE_DAYS=120;
+function pickerPool(){
+  const today=pd(S.mgr.today), cutoff=new Date(today.getTime()-ACTIVE_DAYS*864e5);
+  const recent={};
+  new Set(Object.values(S.weekly).concat([S.snap.weekly[S.snap.currentYear]])).forEach(wk=>(wk||[]).forEach(g=>{
+    if(pd(g.date)>=cutoff) g.results.forEach(r=>{ recent[r.id]=(recent[r.id]||0)+1; });
+  }));
+  const ids=new Set();
+  return S.mgr.players.filter(p=>{ const k=p.id.toLowerCase(); if(ids.has(k)) return false; ids.add(k); return true; }).map(p=>({
+    id:p.id, name:[p.first,p.last].filter(Boolean).join(' '), first:(p.first||'').toLowerCase(), last:(p.last||'').toLowerCase(),
+    lastPlayed:p.lastPlayed||'', recent:recent[p.id]||0,
+    active:!!p.lastPlayed&&pd(p.lastPlayed)>=cutoff
+  }));
+}
+const byRecent=(a,b)=>(b.active-a.active)||(b.recent-a.recent)||(b.lastPlayed||'').localeCompare(a.lastPlayed||'')||a.id.localeCompare(b.id);
+function pickMatches(q){
+  const taken=new Set(S.entry.rows.map(r=>r.id.toLowerCase()));
+  const pool=pickerPool().filter(p=>!taken.has(p.id.toLowerCase()));
+  q=q.trim().toLowerCase();
+  if(!q){
+    const act=pool.filter(p=>p.active).sort(byRecent), old=pool.filter(p=>!p.active).sort(byRecent);
+    return {list:S.pickAll?act.concat(old):act, hidden:S.pickAll?0:old.length};
+  }
+  const scored=[];
+  pool.forEach(p=>{
+    const id=p.id.toLowerCase(), nm=p.name.toLowerCase();
+    let sc=null;
+    if(id.startsWith(q)) sc=0; else if(p.first.startsWith(q)||p.last.startsWith(q)||nm.startsWith(q)) sc=1;
+    else if(id.includes(q)) sc=2; else if(nm.includes(q)) sc=3;
+    if(sc!=null) scored.push(Object.assign({sc},p));
+  });
+  scored.sort((a,b)=>(b.active-a.active)||(a.sc-b.sc)||byRecent(a,b));
+  return {list:scored.slice(0,15), hidden:0};
+}
+function bindPicker(){
+  const inp=$('#addId'), list=$('#pickList'), ghost=$('#addGhost'), tog=$('#pickToggle'), addBtn=$('#addBtn');
+  if(!inp) return;
+  let items=[], idx=-1, open=false;
+  const close=()=>{ open=false; list.classList.add('hide'); inp.setAttribute('aria-expanded','false'); inp.removeAttribute('aria-activedescendant'); };
+  const paintGhost=()=>{
+    const v=inp.value, top=items[0];
+    if(v&&top&&top.id.toLowerCase().startsWith(v.toLowerCase())&&top.id.length>v.length&&open){
+      ghost.innerHTML=`<i>${esc(v)}</i>${esc(top.id.slice(v.length))}`;
+    } else ghost.innerHTML='';
+  };
+  const draw=()=>{
+    const m=pickMatches(inp.value); items=m.list;
+    if(idx>=items.length) idx=items.length-1;
+    if(inp.value&&idx<0&&items.length) idx=0;
+    let html='', lastAct=null;
+    const blank=!inp.value.trim();
+    items.forEach((p,i)=>{
+      if(blank&&p.active!==lastAct){ html+=`<li class="hd" role="presentation">${p.active?'Played recently':'Not played lately'}</li>`; lastAct=p.active; }
+      html+=`<li role="option" id="pk${i}" data-i="${i}" aria-selected="${i===idx}" class="${p.active?'':'stale'}"><b>${esc(p.id)}</b><span>${esc(p.name)}</span><small>${p.lastPlayed?(p.active?dShort(p.lastPlayed):MONTHS[pd(p.lastPlayed).getMonth()]+' '+p.lastPlayed.slice(0,4)):'new'}</small></li>`;
+    });
+    if(m.hidden) html+=`<li class="more" data-more="1" role="option">Show ${m.hidden} players who haven't played lately</li>`;
+    if(!items.length&&!m.hidden) html=`<li class="hd" role="presentation">${inp.value?'No match. Press Add to use it anyway, or add a new player.':'Everyone is already on the list.'}</li>`;
+    list.innerHTML=html;
+    open=true; list.classList.remove('hide'); inp.setAttribute('aria-expanded','true');
+    if(idx>=0){ inp.setAttribute('aria-activedescendant','pk'+idx); const el=list.querySelector('#pk'+idx); if(el) el.scrollIntoView({block:'nearest'}); }
+    paintGhost();
+  };
+  const choose=id=>{ inp.value=''; idx=-1; addFinisher(id); };
+  inp.addEventListener('focus',()=>{ idx=-1; draw(); });
+  inp.addEventListener('input',()=>{ idx=inp.value?0:-1; draw(); });
+  inp.addEventListener('blur',()=>setTimeout(()=>{ if(document.activeElement!==inp) { close(); ghost.innerHTML=''; } },120));
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); if(!open) draw(); idx=Math.min(items.length-1,idx+1); draw(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); idx=Math.max(0,idx-1); draw(); }
+    else if(e.key==='Escape'){ close(); ghost.innerHTML=''; }
+    else if((e.key==='Tab'||e.key==='ArrowRight')&&ghost.innerHTML&&inp.selectionStart===inp.value.length){ e.preventDefault(); inp.value=items[0].id; idx=0; draw(); }
+    else if(e.key==='Enter'){ e.preventDefault(); if(open&&idx>=0&&items[idx]) choose(items[idx].id); else if(inp.value.trim()) choose(resolveId(inp.value)); }
+  });
+  list.addEventListener('pointerdown',e=>e.preventDefault()); // keep the keyboard up
+  list.addEventListener('click',e=>{
+    const li=e.target.closest('li'); if(!li) return;
+    if(li.dataset.more){ S.pickAll=true; draw(); return; }
+    if(li.dataset.i!=null) choose(items[+li.dataset.i].id);
+  });
+  tog.addEventListener('pointerdown',e=>e.preventDefault());
+  tog.addEventListener('click',()=>{ if(open&&!inp.value){ close(); return; } inp.focus(); inp.value=''; idx=-1; draw(); });
+  addBtn.addEventListener('click',()=>{ const v=inp.value.trim(); if(!v){ inp.focus(); return; } choose(open&&idx>=0&&items[idx]?items[idx].id:resolveId(v)); });
+}
+function addFinisher(id){
+  const E=S.entry; if(!id) return;
+  if(E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())){ E.msg=errBox(id+' is already on the list.'); return render(); }
+  const known=S.mgr.players.some(p=>p.id.toLowerCase()===id.toLowerCase());
+  E.rows.push({id,paid:true,note:''});
+  E.msg=known?null:`<div class="banner">${esc(id)} isn't a known Player ID. Check the spelling, or <button class="linkish" data-act="newplayer-entry">add them as a new player</button>.</div>`;
+  S.pickAll=false;
+  render().then(()=>{ const i=$('#addId'); if(i) i.focus(); });
+}
 function resolveId(raw){
   const q=raw.trim().toLowerCase(); if(!q) return null;
   const ps=S.mgr.players;
@@ -951,14 +1108,7 @@ async function loadEntryDate(d){
 function bindManager(){
   const E=S.entry;
   const gd=$('#gdate'); if(gd) gd.onchange=()=>loadEntryDate(gd.value);
-  const af=$('#addForm'); if(af) af.onsubmit=e=>{
-    e.preventDefault(); const id=resolveId($('#addId').value); if(!id) return;
-    if(E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())){ E.msg=errBox(id+' is already on the list.'); return render(); }
-    const known=S.mgr.players.some(p=>p.id.toLowerCase()===id.toLowerCase());
-    E.rows.push({id,paid:true,note:''});
-    E.msg=known?null:`<div class="banner">${esc(id)} isn't a known Player ID. Check the spelling, or <button class="linkish" data-act="newplayer-entry">add them as a new player</button>.</div>`;
-    render().then(()=>{ const i=$('#addId'); if(i) i.focus(); });
-  };
+  bindPicker();
   const sg=$('#saveGame'); if(sg) sg.onclick=async()=>{
     E.busy=true; E.msg=null; render();
     try{
@@ -1010,10 +1160,16 @@ async function refreshAll(){
 }
 
 /* ===================== dialogs ===================== */
+/* Close any pop-up. Its history entry becomes a normal page entry (skipped later by Back). */
+function killDialog(){
+  $('#dialogRoot').innerHTML='';
+  if(history.state&&history.state.dialog){ try{ history.replaceState({nav:S.navCur},'',hashFor(S.navCur)); }catch(e){} }
+}
 function openDialog(html,onMount){
   const root=$('#dialogRoot'), prev=document.activeElement;
   root.innerHTML=`<div class="scrim" data-close="1"><div class="dialog" role="dialog" aria-modal="true">${html}</div></div>`;
-  const close=()=>{ root.innerHTML=''; document.removeEventListener('keydown',k); if(prev&&prev.focus) prev.focus(); };
+  const close=()=>{ killDialog(); document.removeEventListener('keydown',k); if(prev&&prev.focus) prev.focus(); };
+  if(!(history.state&&history.state.dialog)){ try{ history.pushState({nav:S.navCur,dialog:1},'',hashFor(S.navCur)); }catch(e){} }
   const k=e=>{ if(e.key==='Escape') close(); };
   document.addEventListener('keydown',k);
   root.querySelector('.scrim').addEventListener('click',e=>{ if(e.target.dataset.close||e.target.closest('[data-dismiss]')) close(); });
@@ -1105,7 +1261,7 @@ function accountDialog(){
 }
 function signOut(){
   S.token=null; S.me=null; store.set('ybp_token',null); store.set('ybp_me',null);
-  S.mgr=null; S.profiles={}; S.histQuery=''; $('#dialogRoot').innerHTML=''; renderTabs(); go('home');
+  S.mgr=null; S.profiles={}; S.histQuery=''; killDialog(); renderTabs(); go('home');
 }
 function pinDialog(id){
   confirmDialog(`Make a new PIN for ${id}?`,'Any PIN they had stops working.','Make PIN',async()=>{
@@ -1125,22 +1281,22 @@ function pinDialog(id){
 document.addEventListener('click',async e=>{
   const t=e.target.closest('button'); if(!t||t.closest('#dialogRoot')&&!t.dataset.act) return;
   const d=t.dataset;
-  if(d.tab){ $('#dialogRoot').innerHTML=''; return go(d.tab); }
+  if(d.tab){ killDialog(); return go(d.tab); }
   if(d.act==='signin') return signInDialog();
   if(d.act==='account') return accountDialog();
   if(d.act==='signout') return signOut();
-  if(d.act==='mystats'){ $('#dialogRoot').innerHTML=''; S.histQuery=S.me.id; return go('history'); }
+  if(d.act==='mystats'){ killDialog(); S.histQuery=S.me.id; return go('history'); }
   if(d.act==='newplayer') return playerDialog(null);
   if(d.act==='logtoggle'){ const wasAll=S.logAll; S.logAll=!S.logAll; await render(); if(wasAll){ const el=document.getElementById('gamelog'); if(el) el.scrollIntoView({block:'start'}); } return; }
   if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,paid:true,note:''}); E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
   if(d.goto==='pot'){ go('payouts'); setTimeout(()=>{ const el=document.getElementById('toc-pot'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); return; }
   if(d.goto==='season'){ S.standMode='season'; S.year=S.snap.currentYear; return go('standings'); }
   if(d.goto==='week'){ S.standMode='week'; S.year=S.snap.currentYear; S.weekIdx=0; return go('standings'); }
-  if(d.mode){ S.standMode=d.mode; return render(); }
+  if(d.mode){ S.standMode=d.mode; pushNav(); return render(); }
   if(d.nav) return stepPeriod(Number(d.nav));
   if(d.step){ S.players=Math.max(2,Math.min(50,S.players+Number(d.step))); return render(); }
   if(d.pid){ S.histQuery=d.pid; S.profileYear=null; S.logAll=false; return go('history'); }
-  if(d.mgr){ S.mgrTab=d.mgr; S.remStatus=''; if(d.mgr==='reminder') S.rem=null; return render(); }
+  if(d.mgr){ S.mgrTab=d.mgr; S.remStatus=''; if(d.mgr==='reminder') S.rem=null; pushNav(); return render(); }
   const E=S.entry;
   if(d.up!=null){ const i=+d.up; [E.rows[i-1],E.rows[i]]=[E.rows[i],E.rows[i-1]]; return render(); }
   if(d.down!=null){ const i=+d.down; [E.rows[i+1],E.rows[i]]=[E.rows[i],E.rows[i+1]]; return render(); }
@@ -1167,6 +1323,8 @@ function storeSnap(s){ const c=Object.assign({},s); delete c.me; store.set(SNAP_
 (async function start(){
   S.token=store.get('ybp_token');
   try{ S.me=JSON.parse(store.get('ybp_me')||'null'); }catch(e){ S.me=null; }
+  if(location.hash) applyNav(parseHash());
+  pushNav(true);
   let cached=null; try{ cached=JSON.parse(store.get(SNAP_KEY)||'null'); }catch(e){}
   if(cached){ applySnap(cached); renderTabs(); render(); $('#refresh').classList.remove('hide'); }
   else { renderTabs(); render(); }
