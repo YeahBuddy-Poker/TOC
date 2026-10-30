@@ -249,6 +249,11 @@ nav.tabs button[aria-current=page]{color:var(--brass);background:var(--navy-2)}
 .icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid #CFC5AE;background:#fff;display:grid;place-items:center;font-weight:800;line-height:1}
 .paidbox{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--mute)}
 .paidbox input{width:20px;height:20px;accent-color:var(--good)}
+.paysel{min-height:34px!important;padding:4px 8px!important;font-size:14px;font-weight:700;border-radius:8px!important;margin-right:auto}
+.paysel.st-unpaid{color:var(--bad);border-color:#E3B3AF!important;background:#FDF2F1}
+.paysel.st-paid{color:var(--good);border-color:#A9D3B9!important;background:#EFF8F2}
+.paysel.st-witheld{color:#2F5B82;border-color:#A9C1DD!important;background:#EEF3FA}
+.paysel.st-requested{color:var(--brass-deep);border-color:#E2CD9E!important;background:#FBF4E4}
 .banner{background:#FFF1C9;border:1.5px solid var(--brass);border-radius:12px;padding:10px 12px;font-size:15px}
 .err{background:#FBE3E1;border:1.5px solid var(--bad);color:#6E1612;border-radius:12px;padding:10px 12px;font-size:15px}
 .ok{background:#DFF2E7;border:1.5px solid var(--good);color:#0F4A2C;border-radius:12px;padding:10px 12px;font-size:15px}
@@ -886,9 +891,9 @@ function entryHtml(){
       ${E.rows.map((r,i)=>{ const pl=i+1, pay=payoutFor(n,pl), nm=nameOf(r.id); return `<li class="li">
         <span class="place num">${pl}</span>
         <div class="grow"><b>${esc(r.id)}</b><div class="sub num">${esc(nm)}${nm?', ':''}${pointsFor(n,pl)} pts${pay?`, wins ${money(pay)}`:''}</div>
-          ${r.showNote||r.note?`<input class="note-in" data-note="${i}" type="text" placeholder="Note, e.g. witheld or requested" value="${esc(r.note||'')}">`:''}</div>
+          ${r.showNote||r.note?`<input class="note-in" data-note="${i}" type="text" placeholder="Note" value="${esc(r.note||'')}">`:''}</div>
         <div class="ctrls">
-          <label class="paidbox"><input type="checkbox" data-paid="${i}" ${r.paid?'checked':''}>Paid</label>
+          <select class="paysel st-${r.status}" data-pay="${i}" aria-label="Buy-in for ${esc(r.id)}">${PAY_OPTS.map(([v,t])=>`<option value="${v}" ${r.status===v?'selected':''}>${t}</option>`).join('')}</select>
           ${!(r.showNote||r.note)?`<button class="icon-btn" data-noteadd="${i}" aria-label="Add a note for ${esc(r.id)}" title="Add note">✎</button>`:''}
           <button class="icon-btn" data-up="${i}" aria-label="Move ${esc(r.id)} up" ${i===0?'disabled':''}>↑</button>
           <button class="icon-btn" data-down="${i}" aria-label="Move ${esc(r.id)} down" ${i===n-1?'disabled':''}>↓</button>
@@ -999,6 +1004,27 @@ function moneyHtml(){
     <p class="hint">Paid assumes ${money(cfg().buyIn)} for every game played.</p>
   </section>`;
 }
+/* ---------- payment status ----------
+   Not paid  -> G blank,  H blank
+   Paid      -> G "x",    H blank
+   Withheld  -> G "x",    H "witheld"   (taken out of their winnings, so it counts as paid)
+   Requested -> G blank,  H "requested" (Venmo request sent; mark paid later from Payments)
+   Any extra note is kept after the word, e.g. "requested - paid for him last time". */
+const PAY_OPTS=[['unpaid','Not paid'],['paid','Paid'],['witheld','Withheld'],['requested','Requested']];
+function rowFromSheet(r){
+  const raw=String(r.note||'').trim(), low=raw.toLowerCase();
+  let status=r.paid?'paid':'unpaid', note=raw;
+  const m=low.match(/^(wit+h?h?e+ld|wothe[^\s.,-]*|with?eld|requ?e?s?t?e?d?|reque[^\s.,-]*|requs[^\s.,-]*)\b[\s.,:;-]*/);
+  if(m&&/^(wit|wot)/.test(m[1])){ status='witheld'; note=raw.slice(m[0].length); }
+  else if(m&&/^req/.test(m[1])){ status=r.paid?'paid':'requested'; note=r.paid?raw:raw.slice(m[0].length); }
+  return {id:r.id,status,note:note.trim()};
+}
+function rowToSheet(r){
+  const word=r.status==='witheld'?'witheld':r.status==='requested'?'requested':'';
+  const note=[word,(r.note||'').trim()].filter(Boolean).join(' - ');
+  return {paid:r.status==='paid'||r.status==='witheld',note};
+}
+
 /* ---------- player picker: recent players first, type-ahead, dropdown ---------- */
 const ACTIVE_DAYS=120;
 function pickerPool(){
@@ -1089,7 +1115,7 @@ function addFinisher(id){
   const E=S.entry; if(!id) return;
   if(E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())){ E.msg=errBox(id+' is already on the list.'); return render(); }
   const known=S.mgr.players.some(p=>p.id.toLowerCase()===id.toLowerCase());
-  E.rows.push({id,paid:false,note:''});
+  E.rows.push({id,status:'unpaid',note:''});
   E.msg=known?null:`<div class="banner">${esc(id)} isn't a known Player ID. Check the spelling, or <button class="linkish" data-act="newplayer-entry">add them as a new player</button>.</div>`;
   S.pickAll=false;
   render().then(()=>{ const i=$('#addId'); if(i) i.focus(); });
@@ -1103,7 +1129,7 @@ function resolveId(raw){
 }
 async function loadEntryDate(d){
   const E=S.entry; E.date=d; E.msg=null; E.rows=[]; E.editing=false;
-  try{ const g=await call('mgr_getGame',{date:d}); if(g.results.length){ E.rows=g.results.map(r=>({id:r.id,paid:r.paid,note:r.note})); E.editing=true; } }
+  try{ const g=await call('mgr_getGame',{date:d}); if(g.results.length){ E.rows=g.results.map(rowFromSheet); E.editing=true; } }
   catch(e){ E.msg=errBox(e); }
   render();
 }
@@ -1114,8 +1140,8 @@ function bindManager(){
   const sg=$('#saveGame'); if(sg) sg.onclick=async()=>{
     E.busy=true; E.msg=null; render();
     try{
-      const g=await call('mgr_saveGame',{date:E.date,results:E.rows.map((r,i)=>({id:r.id,place:i+1,paid:r.paid,note:r.note||''}))});
-      E.rows=g.results.map(r=>({id:r.id,paid:r.paid,note:r.note})); E.editing=true;
+      const g=await call('mgr_saveGame',{date:E.date,results:E.rows.map((r,i)=>Object.assign({id:r.id,place:i+1},rowToSheet(r)))});
+      E.rows=g.results.map(rowFromSheet); E.editing=true;
       E.msg=`<div class="ok">Saved ${g.results.length} results for ${dLong(E.date)}. Standings are updated.</div>`;
       refreshAll();
     }catch(e){ E.msg=errBox(e); }
@@ -1290,7 +1316,7 @@ document.addEventListener('click',async e=>{
   if(d.act==='mystats'){ killDialog(); S.histQuery=S.me.id; return go('history'); }
   if(d.act==='newplayer') return playerDialog(null);
   if(d.act==='logtoggle'){ const wasAll=S.logAll; S.logAll=!S.logAll; await render(); if(wasAll){ const el=document.getElementById('gamelog'); if(el) el.scrollIntoView({block:'start'}); } return; }
-  if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,paid:false,note:''}); E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
+  if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,status:'unpaid',note:''}); E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
   if(d.goto==='pot'){ go('payouts'); setTimeout(()=>{ const el=document.getElementById('toc-pot'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); return; }
   if(d.goto==='season'){ S.standMode='season'; S.year=S.snap.currentYear; return go('standings'); }
   if(d.goto==='week'){ S.standMode='week'; S.year=S.snap.currentYear; S.weekIdx=0; return go('standings'); }
@@ -1313,7 +1339,7 @@ document.addEventListener('click',async e=>{
     catch(err){ t.disabled=false; t.textContent='Mark paid'; openDialog(`${errBox(err)}<div class="row" style="margin-top:12px"><button class="btn" data-dismiss>OK</button></div>`); }
   }
 });
-document.addEventListener('change',e=>{ const t=e.target; if(t.dataset.paid!=null) S.entry.rows[+t.dataset.paid].paid=t.checked; });
+document.addEventListener('change',e=>{ const t=e.target; if(t.dataset.pay!=null){ S.entry.rows[+t.dataset.pay].status=t.value; t.className='paysel st-'+t.value; } });
 document.addEventListener('input',e=>{ const t=e.target; if(t.dataset.note!=null) S.entry.rows[+t.dataset.note].note=t.value; });
 document.addEventListener('keydown',e=>{
   if(S.tab!=='standings'||/INPUT|SELECT|TEXTAREA/.test((e.target.tagName||''))||$('#dialogRoot').innerHTML) return;
