@@ -1063,7 +1063,9 @@ function bindPicker(){
     paintGhost();
   };
   const choose=id=>{ inp.value=''; idx=-1; addFinisher(id); };
-  inp.addEventListener('focus',()=>{ idx=-1; draw(); });
+  // The list opens when you tap the box, type, or use the arrow, not when focus returns after adding someone,
+  // so it never covers the Paid boxes below.
+  inp.addEventListener('click',()=>{ if(!open){ idx=-1; draw(); } });
   inp.addEventListener('input',()=>{ idx=inp.value?0:-1; draw(); });
   inp.addEventListener('blur',()=>setTimeout(()=>{ if(document.activeElement!==inp) { close(); ghost.innerHTML=''; } },120));
   inp.addEventListener('keydown',e=>{
@@ -1087,7 +1089,7 @@ function addFinisher(id){
   const E=S.entry; if(!id) return;
   if(E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())){ E.msg=errBox(id+' is already on the list.'); return render(); }
   const known=S.mgr.players.some(p=>p.id.toLowerCase()===id.toLowerCase());
-  E.rows.push({id,paid:true,note:''});
+  E.rows.push({id,paid:false,note:''});
   E.msg=known?null:`<div class="banner">${esc(id)} isn't a known Player ID. Check the spelling, or <button class="linkish" data-act="newplayer-entry">add them as a new player</button>.</div>`;
   S.pickAll=false;
   render().then(()=>{ const i=$('#addId'); if(i) i.focus(); });
@@ -1288,7 +1290,7 @@ document.addEventListener('click',async e=>{
   if(d.act==='mystats'){ killDialog(); S.histQuery=S.me.id; return go('history'); }
   if(d.act==='newplayer') return playerDialog(null);
   if(d.act==='logtoggle'){ const wasAll=S.logAll; S.logAll=!S.logAll; await render(); if(wasAll){ const el=document.getElementById('gamelog'); if(el) el.scrollIntoView({block:'start'}); } return; }
-  if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,paid:true,note:''}); E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
+  if(d.act==='newplayer-entry') return playerDialog(null,id=>{ const E=S.entry; if(!E.rows.some(r=>r.id.toLowerCase()===id.toLowerCase())) E.rows.push({id,paid:false,note:''}); E.msg=`<div class="ok">${esc(id)} is added to the league and to this game.</div>`; });
   if(d.goto==='pot'){ go('payouts'); setTimeout(()=>{ const el=document.getElementById('toc-pot'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },80); return; }
   if(d.goto==='season'){ S.standMode='season'; S.year=S.snap.currentYear; return go('standings'); }
   if(d.goto==='week'){ S.standMode='week'; S.year=S.snap.currentYear; S.weekIdx=0; return go('standings'); }
