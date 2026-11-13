@@ -228,6 +228,13 @@ nav.tabs button[aria-current=page]{color:var(--brass);background:var(--navy-2)}
 .entry .place{width:30px;text-align:center;font:800 18px/1 var(--display)}
 .entry .ctrls{display:flex;gap:6px;align-items:center;width:100%;padding-left:42px}
 .entry .ctrls .paidbox{margin-right:auto}
+.scan{background:var(--sand);border-radius:12px;padding:12px;margin-top:14px}
+.scan .row label.btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff}
+.scan svg{width:18px;height:18px}
+.scan input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.flag{display:block;color:var(--brass-deep);font-weight:700;font-size:12.5px}
+.scanpic{max-width:100%;border-radius:10px;margin-top:8px;border:1px solid var(--rule)}
+.ocrtext{white-space:pre-wrap;font-size:12px;background:#fff;border:1px solid var(--rule);border-radius:8px;padding:8px;max-height:220px;overflow:auto;margin-top:6px}
 .combo{position:relative}
 .combo-box{position:relative;display:flex;align-items:center}
 .combo-box input{width:100%;padding-right:46px;position:relative;z-index:1;background:transparent}
@@ -886,6 +893,15 @@ function entryHtml(){
       <div class="meta num" style="align-self:flex-end;padding-bottom:10px">${n?`${n} players, ${money(potFor(n))} pool`:''}</div>
     </div>
     ${E.editing?'<div class="banner" style="margin-top:12px">This date already has results. Saving replaces them.</div>':''}
+    <div class="scan">
+      <div class="row" style="gap:8px">
+        <label class="btn line small" for="scanCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Take a photo</label>
+        <label class="btn line small" for="scanFile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M20 16l-5-5-8 8"/></svg>Choose a screenshot</label>
+        <input type="file" id="scanCam" accept="image/*" capture="environment" ${E.scanBusy?'disabled':''}>
+        <input type="file" id="scanFile" accept="image/*" ${E.scanBusy?'disabled':''}>
+      </div>
+      <p class="hint" style="margin-top:8px">Take a picture of the PokerStars results and the finishers fill in below, in order. A screenshot from the PokerStars app reads best.</p>
+    </div>
     ${E.msg?`<div style="margin-top:12px">${E.msg}</div>`:''}
     <div class="row" style="margin-top:14px;align-items:flex-end">
       <div class="combo" style="flex:1;min-width:0">
@@ -904,7 +920,7 @@ function entryHtml(){
     <ol class="list" style="margin-top:6px">
       ${E.rows.map((r,i)=>{ const pl=i+1, pay=payoutFor(n,pl), nm=nameOf(r.id); return `<li class="li">
         <span class="place num">${pl}</span>
-        <div class="grow"><b>${esc(r.id)}</b><div class="sub num">${esc(nm)}${nm?', ':''}${pointsFor(n,pl)} pts${pay?(r.status==='witheld'?`, wins ${money(pay)}, <b class="won">send ${money(pay-cfg().buyIn)}</b> after the ${money(cfg().buyIn)} buy-in`:`, wins ${money(pay)}`):''}</div>
+        <div class="grow"><b>${esc(r.id)}</b><div class="sub num">${esc(nm)}${nm?', ':''}${pointsFor(n,pl)} pts${pay?(r.status==='witheld'?`, wins ${money(pay)}, <b class="won">send ${money(pay-cfg().buyIn)}</b> after the ${money(cfg().buyIn)} buy-in`:`, wins ${money(pay)}`):''}${r.flag?`<span class="flag">Check this one: ${esc(r.flag)}</span>`:''}</div>
           ${r.showNote||r.note?`<input class="note-in" data-note="${i}" type="text" placeholder="Note" value="${esc(r.note||'')}">`:''}</div>
         <div class="ctrls">
           <select class="paysel st-${r.status}" data-pay="${i}" aria-label="Buy-in for ${esc(r.id)}">${PAY_OPTS.map(([v,t])=>`<option value="${v}" ${r.status===v?'selected':''}>${t}</option>`).join('')}</select>
@@ -1037,6 +1053,115 @@ function rowToSheet(r){
   const word=r.status==='witheld'?'witheld':r.status==='requested'?'requested':'';
   const note=[word,(r.note||'').trim()].filter(Boolean).join(' - ');
   return {paid:r.status==='paid'||r.status==='witheld',note};
+}
+
+/* ---------- read results from photo text ----------
+   Finds league Player IDs in the text Google read from the picture, then puts them in finishing order.
+   Handles common misreads (0/O, 1/l/I, rn/m) and small typos on longer IDs. */
+function levenshtein(a,b){
+  if(a===b) return 0;
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,j)=>j), cur=new Array(n+1);
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+function parseResultsText(text, rosterIds){
+  const norm=s=>String(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+  const conf=s=>norm(s).replace(/rn/g,'m').replace(/vv/g,'w').replace(/[0]/g,'o').replace(/[1il|]/g,'l').replace(/5/g,'s');
+  const roster=rosterIds.map(id=>({id,n:norm(id),c:conf(id)})).filter(x=>x.n.length>=3);
+  const lines=String(text||'').split(/\r?\n/).map(l=>l.replace(/\s+/g,' ').trim()).filter(Boolean);
+  const found=[];
+  lines.forEach((line,li)=>{
+    const rm=line.match(/^#?\s*(\d{1,2})(?:st|nd|rd|th)?(?=[\s.):,-]|$)[\s.):,-]*/i);
+    let rank=rm?Number(rm[1]):null;
+    const body=rm?line.slice(rm[0].length):line;
+    const toks=body.split(/[\s,;|()[\]]+/).filter(Boolean);
+    const hits=[];
+    for(let i=0;i<toks.length;i++){
+      let best=null;
+      for(const span of [1,2,3]){
+        if(i+span>toks.length) break;
+        const raw=toks.slice(i,i+span).join(' ');
+        const cn=norm(raw), cc=conf(raw);
+        if(cn.length<3) continue;
+        for(const x of roster){
+          let sc=null;
+          if(cn===x.n) sc=0;
+          else if(cc===x.c) sc=0.4;
+          else if(x.n.length>=5&&cn.length>x.n.length&&cn.length<=x.n.length+4&&(cn.startsWith(x.n)||cc.startsWith(x.c))) sc=0.6;
+          else if(x.n.length>=6&&Math.abs(cc.length-x.c.length)<=2){
+            const d=levenshtein(cc,x.c);
+            if(d<=Math.max(1,Math.floor(x.n.length*0.2))) sc=1+d;
+          }
+          if(sc!=null&&(!best||sc<best.sc||(sc===best.sc&&x.n.length>best.len))) best={id:x.id,sc,len:x.n.length,raw,span};
+        }
+      }
+      if(best){ hits.push(best); i+=best.span-1; }
+    }
+    hits.forEach((h,k)=>found.push({id:h.id,rank:k===0?rank:null,line:li,exact:h.sc<0.5,raw:h.raw}));
+  });
+  // Order: by the place numbers if most names have one, otherwise top to bottom as they appear.
+  const ranked=found.filter(f=>f.rank!=null);
+  const useRanks=ranked.length>=2&&ranked.length>=found.length*0.6;
+  const ordered=useRanks
+    ? ranked.slice().sort((a,b)=>a.rank-b.rank||a.line-b.line).concat(found.filter(f=>f.rank==null).map(f=>Object.assign({},f,{noPlace:true})))
+    : found;
+  const seen=new Set(), out=[];
+  ordered.forEach(f=>{ const k=f.id.toLowerCase(); if(seen.has(k)) return; seen.add(k); out.push(f); });
+  // Places that look skipped (e.g. 1,2,4) suggest a name the photo didn't show clearly
+  const missing=[];
+  if(useRanks){ const rs=new Set(out.filter(f=>f.rank!=null).map(f=>f.rank)); const max=Math.max(...rs); for(let r=1;r<=max;r++) if(!rs.has(r)) missing.push(r); }
+  return {players:out,usedPlaces:useRanks,missing,lines:lines.length};
+}
+
+/* Shrink the picture before sending it: faster upload, and plenty sharp for reading text. */
+function shrinkImage(file){
+  return new Promise((ok,bad)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{
+      try{
+        const max=2200, k=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+        const c=document.createElement('canvas'); c.width=Math.round(img.naturalWidth*k); c.height=Math.round(img.naturalHeight*k);
+        const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(img,0,0,c.width,c.height);
+        ok(c.toDataURL('image/jpeg',0.88).split(',')[1]);
+      }catch(e){ bad(e); } finally{ URL.revokeObjectURL(url); }
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); bad(new Error('That file isn\'t a picture the app can open. Try a JPG or PNG screenshot.')); };
+    img.src=url;
+  });
+}
+async function handleScan(file){
+  if(!file) return;
+  const E=S.entry;
+  const run=async()=>{
+    E.scanBusy=true; E.msg=loader('Reading the results…',true); render();
+    try{
+      const b64=await shrinkImage(file);
+      const r=await call('mgr_ocr',{image:b64,mime:'image/jpeg'});
+      const res=parseResultsText(r.text,S.mgr.players.map(p=>p.id));
+      const pic=`<details style="margin-top:8px"><summary>Show the picture</summary><img class="scanpic" alt="The results picture" src="data:image/jpeg;base64,${b64}"></details>
+        <details style="margin-top:6px"><summary>Show the text Google read</summary><div class="ocrtext">${esc(r.text||'(no text found)')}</div></details>`;
+      if(!res.players.length){
+        E.msg=`<div class="err">Couldn't find any league Player IDs in that picture. Try a closer, straighter photo or a screenshot, or add the players by hand.${pic}</div>`;
+      }else{
+        E.rows=res.players.map(p=>({id:p.id,status:'unpaid',note:'',
+          flag:[!p.exact?`read as "${p.raw}"`:'',p.noPlace?'its place wasn\'t shown, so check where it belongs':''].filter(Boolean).join('; ')}));
+        E.dirty=true;
+        const flagged=E.rows.filter(r=>r.flag).length;
+        E.msg=`<div class="banner"><b>Read ${res.players.length} players from the picture, in finishing order.</b> Check the order before saving.
+          ${flagged?`<br>${flagged} name${flagged===1?' was':'s were'} hard to read and ${flagged===1?'is':'are'} marked below.`:''}
+          ${res.missing.length?`<br>The picture skipped place${res.missing.length===1?'':'s'} ${res.missing.join(', ')}, so someone may be missing. Add them with the box below and move them into place.`:''}
+          ${pic}</div>`;
+      }
+    }catch(e){ E.msg=errBox(e); }
+    E.scanBusy=false; render();
+  };
+  if(E.rows.length) confirmDialog(E.rows.length===1?'Replace the player already on the list?':`Replace the ${E.rows.length} players already on the list?`,'The players read from the picture will take their place.','Replace',run);
+  else run();
 }
 
 /* ---------- player picker: recent players first, type-ahead, dropdown ---------- */
@@ -1357,7 +1482,8 @@ document.addEventListener('click',async e=>{
     catch(err){ t.disabled=false; t.textContent='Mark paid'; openDialog(`${errBox(err)}<div class="row" style="margin-top:12px"><button class="btn" data-dismiss>OK</button></div>`); }
   }
 });
-document.addEventListener('change',e=>{ const t=e.target; if(t.dataset.pay!=null){ S.entry.rows[+t.dataset.pay].status=t.value; S.entry.dirty=true; t.className='paysel st-'+t.value; render(); } });
+document.addEventListener('change',e=>{ const t=e.target;
+  if(t.id==='scanCam'||t.id==='scanFile'){ const f=t.files&&t.files[0]; t.value=''; handleScan(f); return; } if(t.dataset.pay!=null){ S.entry.rows[+t.dataset.pay].status=t.value; S.entry.dirty=true; t.className='paysel st-'+t.value; render(); } });
 document.addEventListener('input',e=>{ const t=e.target; if(t.dataset.note!=null){ S.entry.rows[+t.dataset.note].note=t.value; S.entry.dirty=true; } });
 document.addEventListener('keydown',e=>{
   if(S.tab!=='standings'||/INPUT|SELECT|TEXTAREA/.test((e.target.tagName||''))||$('#dialogRoot').innerHTML) return;
